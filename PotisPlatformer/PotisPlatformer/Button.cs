@@ -91,17 +91,13 @@ namespace Platformer
             if (Controls.CurMS.LeftButton == ButtonState.Pressed && Rect.Intersects(new Rectangle(Controls.CurMS.X, Controls.CurMS.Y, 1, 1)))
             {
                 if (TexPressed != null)
-                {
                     spriteBatch.Draw(TexPressed, Rect, Color.White);
-                }
                 spriteBatch.DrawString(Assets.BigFont, Text, new Vector2(Rect.X + Rect.Width / 2 - Assets.BigFont.MeasureString(Text).X / 2, Rect.Y + Rect.Height / 2 - Assets.BigFont.MeasureString(Text).Y / 2), Color);
             }
             else
             {
                 if (Tex != null)
-                {
                     spriteBatch.Draw(Tex, Rect, Color.White);
-                }
                 spriteBatch.DrawString(Assets.BigFont, Text, new Vector2(Rect.X + Rect.Width / 2 - Assets.BigFont.MeasureString(Text).X / 2, Rect.Y + Rect.Height / 2 - Assets.BigFont.MeasureString(Text).Y / 2), Color);
             }
         }
