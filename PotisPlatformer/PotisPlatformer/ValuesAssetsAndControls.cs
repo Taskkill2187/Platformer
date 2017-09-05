@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Runtime.InteropServices;
 
 namespace Platformer
 {
@@ -26,6 +27,41 @@ namespace Platformer
         {
             return new Rectangle(R.X, R.Y, R.Width, R.Height);
         }
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetConsoleWindow();
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+        [DllImport("user32.dll")]
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        [DllImport("Kernel32")]
+        public static extern void AllocConsole();
+        [DllImport("Kernel32")]
+        public static extern void FreeConsole();
+        [DllImport("kernel32.dll")]
+        private static extern bool AttachConsole(uint dwProcessId);
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetStdHandle(UInt32 nStdHandle);
+        [DllImport("kernel32.dll")]
+        public static extern void SetStdHandle(UInt32 nStdHandle, IntPtr handle);
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        public static extern int DeleteMenu(IntPtr hMenu, int nPosition, int wFlags);
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsWindowVisible(IntPtr hWnd);
+
+        public const int MF_BYCOMMAND = 0x00000000;
+        public const int SC_CLOSE = 0xF060;
+        public const int SC_MINIMIZE = 0xF020;
+        public const int SC_MAXIMIZE = 0xF030;
+        public const int SC_SIZE = 0xF000;
     }
     public static class Controls
     {
@@ -92,6 +128,7 @@ namespace Platformer
 
         public static SpriteFont Font;
         public static SpriteFont BigFont;
+        public static SpriteFont SmallFont;
 
         public static SoundEffect CoinSound;
         public static SoundEffect Death;
@@ -131,6 +168,7 @@ namespace Platformer
 
             Font = Content.Load<SpriteFont>("SmallFont");
             BigFont = Content.Load<SpriteFont>("BigFont");
+            SmallFont = Content.Load<SpriteFont>("MicroFont");
             
             Jump = Content.Load<SoundEffect>(@"SoundEffects\JumpSound");
             CoinSound = Content.Load<SoundEffect>(@"SoundEffects\Coin");

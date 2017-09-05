@@ -46,5 +46,17 @@ namespace Platformer {
                 this["Music"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ParticleEffects {
+            get {
+                return ((bool)(this["ParticleEffects"]));
+            }
+            set {
+                this["ParticleEffects"] = value;
+            }
+        }
     }
 }
