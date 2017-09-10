@@ -14,7 +14,9 @@ namespace Platformer
     public class Kugelwilli_Spawner : Block
     {
         int SpawnTimer;
-        const int SpawnTime = 180;
+        const int SpawnTime = 100;
+
+        public Kugelwilli_Spawner() { }
         public Kugelwilli_Spawner(Vector2 Pos, Level Parent) : base(Assets.KugelWilli_Spawner, Pos, true, Parent) { Rect.Height *= 2; }
 
         public override void Update()

@@ -12,12 +12,12 @@ namespace Platformer.Neural_Network
     {
         public static Level TestingLevel;
         public static Level DrawLevel;
-        public static List<AI_Player> Population = new List<AI_Player>();
+        public static List<AI_Player> Population;
         public const int PopulationCount = 1000;
         public static int Generation;
         public static float GenerationCompletionPercentage;
         public static bool HasReachedTheEnd;
-        static Vector2 RespawnPoint = Vector2.Zero;
+        static Vector2 RespawnPoint;
         static int MaxFitness;
         static int AverageFitness;
 
@@ -25,27 +25,35 @@ namespace Platformer.Neural_Network
 
         public static void CreateNewEvolution(Level TestingLevel, Vector2 RespawnPoint)
         {
-            Population = new List<AI_Player>();
-            MaxFitness = 0;
-            AverageFitness = 0;
-            Generation = 0;
-            HasReachedTheEnd = false;
-            AI_Player.MutationProbability = 0.5;
-            Evolution_Manager.TestingLevel = (Level)TestingLevel.Clone();
-            Evolution_Manager.RespawnPoint = RespawnPoint;
-            DrawLevel = (Level)TestingLevel.Clone();
-            for (int i = 0; i < PopulationCount; i++)
+            if (Population == null)
             {
-                Population.Add(new AI_Player(TestingLevel.PlayerPos, TestingLevel, 
-                    new Vector2(Values.WindowSize.X / 2, 150), new Vector2(250, 150)));
+                Population = new List<AI_Player>();
+                MaxFitness = 0;
+                AverageFitness = 0;
+                Generation = 0;
+                HasReachedTheEnd = false;
+                AI_Player.MutationProbability = 0.5;
+                Evolution_Manager.TestingLevel = (Level)TestingLevel.Clone();
+                Evolution_Manager.RespawnPoint = RespawnPoint;
+                DrawLevel = (Level)TestingLevel.Clone();
+                for (int i = 0; i < PopulationCount; i++)
+                {
+                    Population.Add(new AI_Player(TestingLevel.PlayerPos, TestingLevel,
+                        new Vector2(Values.WindowSize.X / 2, 175), new Vector2(250, 100)));
+                }
+            }
+            else
+            {
+                HasReachedTheEnd = false;
+                AI_Player.MutationProbability = 0.4;
+                Evolution_Manager.TestingLevel = (Level)TestingLevel.Clone();
+                Evolution_Manager.RespawnPoint = RespawnPoint;
+                DrawLevel = (Level)TestingLevel.Clone();
             }
         }
 
         public static void TestCurrentGeneration()
         {
-            StoredData.Default.SoundEffects = false;
-            StoredData.Default.ParticleEffects = false;
-            StoredData.Default.Music = false;
             foreach (AI_Player P in Population)
             {
                 List<float> FitnessPerTick = new List<float>();
@@ -62,7 +70,7 @@ namespace Platformer.Neural_Network
 
                     if (P.DeathTimer > 0)
                         break;
-                    if (FitnessPerTick.Count > 300 && P.Rect.X - FitnessPerTick[FitnessPerTick.Count - 300] < 125)
+                    if (FitnessPerTick.Count > 300 && P.Rect.X - FitnessPerTick[FitnessPerTick.Count - 300] < 50)
                         break;
                     if (LevelInstance.Ending == true)
                     {
@@ -71,22 +79,25 @@ namespace Platformer.Neural_Network
                     }
                 }
                 
-                P.Fitness = P.Rect.X;
+                P.Fitness = P.Rect.X + P.Rect.Y / Values.WindowSize.Y / 6f;
 
                 GenerationCompletionPercentage = Population.IndexOf(P) / (float)Population.Count;
 
                 if (HasReachedTheEnd)
                     break;
+
+                if (LevelCreator.KillEvolutionThread)
+                    break;
             }
             
-            Population = Population.OrderBy(x => x.Fitness).ToList();
+            if (!LevelCreator.KillEvolutionThread)
+            {
+                Population = Population.OrderBy(x => x.Fitness).ToList();
+                Best = (AI_Player)Population.Last().Clone();
 
-            MaxFitness = (int)Population.Max(x => x.Fitness);
-            AverageFitness = (int)Population.Average(x => x.Fitness);
-
-            StoredData.Default.SoundEffects = true;
-            StoredData.Default.ParticleEffects = true;
-            StoredData.Default.Music = true;
+                MaxFitness = (int)Population.Max(x => x.Fitness);
+                AverageFitness = (int)Population.Average(x => x.Fitness);
+            }
         }
         public static void FinallizeGeneration()
         {
@@ -123,6 +134,8 @@ namespace Platformer.Neural_Network
 
             // Last Steps
             AI_Player.MutationProbability *= 0.985f;
+            if (AI_Player.MutationProbability < 0.1)
+                AI_Player.MutationProbability = 0.1;
 
             //Console.WriteLine("Generation " + Generation + " finalized!");
 
@@ -147,10 +160,15 @@ namespace Platformer.Neural_Network
             DrawLevel.UpdateCameraPos(new Vector2(MaxFitness, 0));
             DrawLevel.DrawWithoutPlayer(SB);
 
+            if (Best != null)
+                Best.DrawBrain(SB);
+
             SB.Draw(Assets.White, new Rectangle(MaxFitness + (int)DrawLevel.Camera.X, 0, 3, (int)Values.WindowSize.Y), Color.Gold);
-            SB.DrawString(Assets.Font, "MaxFitness: " + MaxFitness.ToString(), new Vector2(MaxFitness + (int)DrawLevel.Camera.X + 5, Values.WindowSize.Y / 2 - 30), Color.Gold);
+            if (Best != null)
+                SB.Draw(Assets.White, new Rectangle(MaxFitness + (int)DrawLevel.Camera.X - 10, Best.Rect.Y - 3, 23, 6), Color.Gold);
+            SB.DrawString(Assets.Font, "MaxFitness: " + MaxFitness.ToString(), new Vector2(MaxFitness + (int)DrawLevel.Camera.X + 5, Values.WindowSize.Y / 2 + 30), Color.Gold);
             SB.Draw(Assets.White, new Rectangle(AverageFitness + (int)DrawLevel.Camera.X, 0, 3, (int)Values.WindowSize.Y), Color.Black);
-            SB.DrawString(Assets.Font, "AverageFitness: " + AverageFitness.ToString(), new Vector2(AverageFitness + (int)DrawLevel.Camera.X + 5, Values.WindowSize.Y / 2 + 30), Color.Black);
+            SB.DrawString(Assets.Font, "AverageFitness: " + AverageFitness.ToString(), new Vector2(AverageFitness + (int)DrawLevel.Camera.X + 5, Values.WindowSize.Y / 2 - 30), Color.Black);
 
             Vector2 StringSize = Assets.Font.MeasureString("Generation " + Generation.ToString() + ": " + ((int)(GenerationCompletionPercentage * 100)).ToString() + "%");
             SB.DrawString(Assets.Font, "Generation " + Generation.ToString() + ": " + ((int)(GenerationCompletionPercentage * 100)).ToString() + "%", 

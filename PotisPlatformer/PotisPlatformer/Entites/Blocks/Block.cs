@@ -33,6 +33,7 @@ namespace Platformer
         bool TopRightEdge;
         BlockTextureState TexState = BlockTextureState.Default;
 
+        public Block() { }
         public Block(Texture2D Texture, Vector2 Pos, bool Collision, Level Parent)
         {
             Rect = new Rectangle((int)Pos.X, (int)Pos.Y, Level.BlockScale, Level.BlockScale);
@@ -153,7 +154,7 @@ namespace Platformer
                     TopLeftEdge = true;
                     for (int i = 0; i < Parent.BlockList.Count; i++)
                     {
-                        if (Parent.BlockList[i].GetType() != typeof(JumpBlock) && Parent.BlockList[i].Rect.Intersects(new Rectangle(Rect.X - 5, Rect.Y - 5, 5, 5))) { TopLeftEdge = false; }
+                        if (Parent.BlockList[i].GetType() != typeof(JumpBlock) && Parent.BlockList[i].GetType() != typeof(Kugelwilli_Spawner) && Parent.BlockList[i].Rect.Intersects(new Rectangle(Rect.X - 5, Rect.Y - 5, 5, 5))) { TopLeftEdge = false; }
                     }
                 }
                 else if (TexState == BlockTextureState.FreeLeft)
@@ -161,7 +162,7 @@ namespace Platformer
                     TopRightEdge = true;
                     for (int i = 0; i < Parent.BlockList.Count; i++)
                     {
-                        if (Parent.BlockList[i].GetType() != typeof(JumpBlock) && Parent.BlockList[i].Rect.Intersects(new Rectangle(Rect.X + Rect.Width, Rect.Y - 5, 5, 5))) { TopRightEdge = false; }
+                        if (Parent.BlockList[i].GetType() != typeof(JumpBlock) && Parent.BlockList[i].GetType() != typeof(Kugelwilli_Spawner) && Parent.BlockList[i].Rect.Intersects(new Rectangle(Rect.X + Rect.Width, Rect.Y - 5, 5, 5))) { TopRightEdge = false; }
                     }
                 }
                 else if (TexState == BlockTextureState.Default)
@@ -169,12 +170,12 @@ namespace Platformer
                     TopLeftEdge = true;
                     for (int i = 0; i < Parent.BlockList.Count; i++)
                     {
-                        if (Parent.BlockList[i].GetType() != typeof(JumpBlock) && Parent.BlockList[i].Rect.Intersects(new Rectangle(Rect.X - 5, Rect.Y - 5, 5, 5))) { TopLeftEdge = false; }
+                        if (Parent.BlockList[i].GetType() != typeof(JumpBlock) && Parent.BlockList[i].GetType() != typeof(Kugelwilli_Spawner) && Parent.BlockList[i].Rect.Intersects(new Rectangle(Rect.X - 5, Rect.Y - 5, 5, 5))) { TopLeftEdge = false; }
                     }
                     TopRightEdge = true;
                     for (int i = 0; i < Parent.BlockList.Count; i++)
                     {
-                        if (Parent.BlockList[i].GetType() != typeof(JumpBlock) && Parent.BlockList[i].Rect.Intersects(new Rectangle(Rect.X + Rect.Width, Rect.Y - 5, 5, 5))) { TopRightEdge = false; }
+                        if (Parent.BlockList[i].GetType() != typeof(JumpBlock) && Parent.BlockList[i].GetType() != typeof(Kugelwilli_Spawner) && Parent.BlockList[i].Rect.Intersects(new Rectangle(Rect.X + Rect.Width, Rect.Y - 5, 5, 5))) { TopRightEdge = false; }
                     }
                 }
                 else

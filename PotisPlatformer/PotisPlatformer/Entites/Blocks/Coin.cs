@@ -17,6 +17,10 @@ namespace Platformer
         int AnimState;
         const int AnimStates = 4;
 
+        public Coin()
+        {
+
+        }
         public Coin(Vector2 Pos, Level Parent) : base(Assets.Coin, Pos, false, Parent)
         {
 

@@ -13,6 +13,7 @@ namespace Platformer
 {
     public class Goomba : Enemy
     {
+        public Goomba() { }
         public Goomba(int PosX, int PosY, bool FacingRight, Level Parent) : base (PosX, PosY, FacingRight, 2.5f, Parent)
         {
             Texture = Assets.Walker;
@@ -21,14 +22,6 @@ namespace Platformer
 
         public override void OnDeath()
         {
-            if (Parent == null)
-            {
-                throw new NullReferenceException();
-            }
-
-            if (Parent.EnemyList == null)
-                throw new Exception();
-
             int index = Parent.EnemyList.IndexOf(this);
             Parent.EnemyList.RemoveAt(index);
             ParticleManager.CreateParticleExplosionFromEntityTexture(this, new Rectangle(0, 0, 16, 16), 0.3f, -10f, !FacingRight, true, false, Parent);

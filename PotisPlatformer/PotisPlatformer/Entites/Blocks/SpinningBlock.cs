@@ -17,6 +17,7 @@ namespace Platformer
         int AnimState;
         const int AnimStates = 8;
 
+        public SpinningBlock() { }
         public SpinningBlock(Vector2 Pos, Level Parent) : base(Assets.SpinningBlock, Pos, true, Parent) { }
 
         public override void Update()

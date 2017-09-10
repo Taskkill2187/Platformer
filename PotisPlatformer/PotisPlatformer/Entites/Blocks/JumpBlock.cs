@@ -25,6 +25,11 @@ namespace Platformer
         public float Strength;
         public float Friction;
 
+        public JumpBlock()
+        {
+
+        }
+
         public JumpBlock(Vector2 Pos, Direction Direction, float Strength, Level Parent)
             : base (Assets.JumpBlock, Pos, false, Parent)
         {

@@ -96,7 +96,7 @@ namespace Platformer
                 {
                     for (int i = 0; i < Parent.BlockList.Count; i++)
                     {
-                        if (i > Parent.BlockList.Count || Parent.BlockList[i] == null)
+                        if (Parent == null || i > Parent.BlockList.Count || Parent.BlockList[i] == null)
                             break;
 
                         if (Parent.BlockList[i].Rect.X > Pos.X - Level.BlockScale &&

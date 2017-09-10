@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using Platformer.Neural_Network;
 
 namespace Platformer
 {
@@ -74,6 +75,8 @@ namespace Platformer
         public Vector2 PlayerPos;
         public Texture2D Background;
 
+        Player LastPlayerCopy;
+
         public Level()
         {
             BlockList = new List<Block>();
@@ -117,6 +120,7 @@ namespace Platformer
                     if (EnemyList[i].Rect.Y > ThisPlayer.Rect.Y + ThisPlayer.Rect.Height / 2 && ThisPlayer.Vel.Y > 0)
                     {
                         ThisPlayer.Jump(true);
+                        ThisPlayer.Rect.Y = EnemyList[i].Rect.Y - ThisPlayer.Rect.Height;
                         EnemyList[i].OnDeath();
                     }
                     else
@@ -188,28 +192,43 @@ namespace Platformer
                 }
             }
         }
-        public float GetNeuronValueForTheseCoords(Point Coords)
+        public float GetNeuronValuesForTheseCoords(Point Coords)
         {
             Coords = new Point(Coords.X / BlockScale, Coords.Y / BlockScale);
 
-            foreach (Block B in BlockList)
-                if (B.Rect.X / BlockScale == Coords.X && B.Rect.Y / BlockScale == Coords.Y)
-                    return 1;
-
             foreach (Enemy E in EnemyList)
-                if (E.Rect.X / BlockScale == Coords.X && E.Rect.Y / BlockScale == Coords.Y)
+                if (E.Rect.X / BlockScale == Coords.X && E.Rect.Y / BlockScale == Coords.Y ||
+                    E.Rect.Height > BlockScale && E.Rect.X / BlockScale == Coords.X && E.Rect.Y / BlockScale + 1 == Coords.Y)
                     return -1;
 
+            foreach (Block B in BlockList)
+                if (B.Rect.X / BlockScale == Coords.X && B.Rect.Y / BlockScale == Coords.Y ||
+                    B.Rect.Height > BlockScale && B.Rect.X / BlockScale == Coords.X && B.Rect.Y / BlockScale + 1 == Coords.Y)
+                    return 1;
+            
             return 0;
+        }
+        Neuron[,] GetNeuronValuesForTheseCoords(Point[,] Coords, Neuron[,] InputArray)
+        {
+            Neuron[,] NeuronArray = new Neuron[Coords.GetLength(0), Coords.GetLength(1)];
+
+            for (int x = 0; x < Coords.GetLength(0); x++)
+                for (int y = 0; y < Coords.GetLength(1); y++)
+                {
+                    NeuronArray[x, y] = new Neuron(InputArray[x, y].Pos);
+
+                }
+
+            return NeuronArray;
         }
         public bool NoBlockIntersectsThisRectangle(Rectangle Rect)
         {
             for (int i = 0; i < BlockList.Count; i++)
             {
                 if (BlockList[i].Rect.Intersects(Rect))
-                    return true;
+                    return false;
             }
-            return false;
+            return true;
         }
 
         public void UpdateCameraPos()
@@ -285,6 +304,9 @@ namespace Platformer
                 ThisPlayer.Rect = new Rectangle((int)ThisPlayer.RespawnPoint.X, (int)ThisPlayer.RespawnPoint.Y, BlockScale, (int)(BlockScale * 1.75f));
                 ThisPlayer.Vel = Vector2.Zero;
                 ThisPlayer.CanMove = true;
+                ThisPlayer.MaxWalkSpeed = 0;
+                ThisPlayer.Timer = 0;
+                LastPlayerCopy = (Player)ThisPlayer.Clone();
             }
             Ending = false;
             SaidEndingPhrase = false;

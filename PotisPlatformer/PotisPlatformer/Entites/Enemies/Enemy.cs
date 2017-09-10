@@ -31,6 +31,7 @@ namespace Platformer
         internal int WalkAnimStates;
         public int WalkAnimState;
 
+        public Enemy() { }
         public Enemy(int PosX, int PosY, bool FacingRight, float MaxWalkSpeed, Level Parent)
         {
             Size = 1;
@@ -122,6 +123,10 @@ namespace Platformer
         public override object Clone()
         {
             Enemy E = (Enemy)this.MemberwiseClone();
+            E.Rect = new Rectangle(Rect.X, Rect.Y, Rect.Width, Rect.Height);
+            E.Vel = new Vector2(Vel.X, Vel.Y);
+            E.CreatorClickPos = new Point(CreatorClickPos.X, CreatorClickPos.Y);
+            E.Texture = Texture;
             E.RightCheck = new Rectangle();
             E.LeftCheck = new Rectangle();
             return E;
@@ -131,6 +136,12 @@ namespace Platformer
         {
             Vel.Y += GravForce;
             Vel.X /= 1.01f;
+
+            if (Rect.X < 0)
+                FacingRight = true;
+
+            if (Rect.X + Rect.Width > Parent.End.X)
+                FacingRight = false;
 
             if (FacingRight)
             {

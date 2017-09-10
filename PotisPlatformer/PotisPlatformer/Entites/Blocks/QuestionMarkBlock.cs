@@ -19,6 +19,10 @@ namespace Platformer
 
         Entity Content;
 
+        public QuestionMarkBlock()
+        {
+
+        }
         public QuestionMarkBlock(Vector2 Pos, Entity Content, Level Parent) : base(Assets.QuestionMarkBlock, Pos, true, Parent)
         {
             this.Content = Content;

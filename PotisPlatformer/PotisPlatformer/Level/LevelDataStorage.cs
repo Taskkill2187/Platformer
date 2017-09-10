@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.IO;
 
 namespace Platformer
 {
@@ -28,6 +29,17 @@ namespace Platformer
             SpawnLevel1Enemys();
             //SpawnLevel2Enemys();
             //SpawnLevel3Enemys();
+
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "//PlatformerLevels";
+            if (Directory.Exists(path))
+                foreach (string F in System.IO.Directory.GetFiles(path))
+                {
+                    System.Xml.Serialization.XmlSerializer reader =
+                        new System.Xml.Serialization.XmlSerializer(typeof(Level));
+                    System.IO.StreamReader DataStream = new System.IO.StreamReader(F);
+                    Level overview = (Level)reader.Deserialize(DataStream);
+                    DataStream.Close();
+                }
         }
 
         public static void BuildLevel1()

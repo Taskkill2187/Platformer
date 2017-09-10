@@ -15,6 +15,10 @@ namespace Platformer
     {
         public bool Falling;
 
+        public FallingBlock()
+        {
+
+        }
         public FallingBlock(Vector2 Pos, bool Collision, Level Parent) : base(Assets.BlockGrass, Pos, Collision, Parent)
         {
             this.Rect = new Rectangle((int)Pos.X, (int)Pos.Y, Level.BlockScale, Level.BlockScale);

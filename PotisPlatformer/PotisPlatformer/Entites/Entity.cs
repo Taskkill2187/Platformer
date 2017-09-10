@@ -19,7 +19,10 @@ namespace Platformer
 
         public Point CreatorClickPos;
 
+        //[XmlIgnore]
         public Level Parent;
+
+        public Entity() { }
 
         public Vector2 GetPosVector2() { return new Vector2(Rect.X, Rect.Y); }
         public Vector2 GetSizeVector2() { return new Vector2(Rect.Width, Rect.Height); }

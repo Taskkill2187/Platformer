@@ -24,6 +24,7 @@ namespace Platformer
         internal int Timer;
         public int DeathTimer;
 
+        public Player() { }
         public Player(Vector2 Pos, Level Parent)
         {
             this.Texture = Assets.PlayerWalk;
@@ -42,6 +43,14 @@ namespace Platformer
             if (CanMove)
             {
                 Vel.X /= 1.05f;
+                
+                Vector2 AntiGravVel = Vel;
+                if (AntiGravVel.Y > -5)
+                    AntiGravVel.Y = -5;
+                Rectangle HalfFuture = new Rectangle(Rect.X + (int)AntiGravVel.X / 2, Rect.Y + (int)AntiGravVel.Y / 2, Rect.Width, Rect.Height);
+                HalfFuture.Inflate(-10, -10);
+                if (!Parent.NoBlockIntersectsThisRectangle(HalfFuture))
+                    Vel = Vector2.Zero;
 
                 if (Controls.CurKS.IsKeyDown(Keys.D))
                 {
@@ -93,6 +102,14 @@ namespace Platformer
 
             if (Rect.Y > Values.WindowSize.Y && DeathTimer == 0)
                 OnDeath();
+
+            Vector2 AntiGravVel2 = Vel;
+            if (AntiGravVel2.Y > -5)
+                AntiGravVel2.Y = -5;
+            Rectangle HalfFuture2 = new Rectangle(Rect.X + (int)AntiGravVel2.X / 2, Rect.Y + (int)AntiGravVel2.Y / 2, Rect.Width, Rect.Height);
+            HalfFuture2.Inflate(-10, -10);
+            if (!Parent.NoBlockIntersectsThisRectangle(HalfFuture2))
+                Vel = -Vel;
 
             Rect = new Rectangle(Rect.X + (int)Vel.X, Rect.Y + (int)Vel.Y, Rect.Width, Rect.Height);
 

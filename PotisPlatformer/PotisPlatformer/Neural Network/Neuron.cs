@@ -28,7 +28,7 @@ namespace Platformer.Neural_Network
 
         public override void Mutate()
         {
-            if (Values.RDM.NextDouble() < AI_Player.MutationProbability / 5)
+            while (Values.RDM.NextDouble() < AI_Player.MutationProbability / 5)
             {
                 startValue += (float)Values.RDM.NextDouble() - 0.5f;
 

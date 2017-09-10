@@ -27,7 +27,7 @@ namespace Platformer
         public static Player ThisPlayer = new Player(new Vector2(), CurrentLevel);
         static Rectangle SelectionRect;
         static int SnapRange = 15;
-        static bool KillEvolutionThread;
+        public static bool KillEvolutionThread;
         static bool WindowHasBeenShownAfterFinishedEvolution = false;
 
         static Menu CreateMenu()
@@ -136,7 +136,7 @@ namespace Platformer
         public static Level CreateNewLevel()
         {
             Level L = new Level();
-            L.End = new Vector2(20 * Level.BlockScale, Values.WindowSize.Y - Level.BlockScale - Level.EndHeight);
+            L.End = new Vector2(30 * Level.BlockScale, Values.WindowSize.Y - Level.BlockScale - Level.EndHeight);
             for (int i = 0; i < L.End.X / Level.BlockScale + 10; i++)
             {
                 L.BlockList0.Add(new Block(Assets.BlockGrass, new Vector2(i * Level.BlockScale, Values.WindowSize.Y - Level.BlockScale), true, L));
@@ -153,8 +153,29 @@ namespace Platformer
             CurrentLevel.SaveCurrentEntityConfig();
             LevelDataStorage.LvlList.Add((Level)CurrentLevel.Clone());
             MenuManager.BuildMenus();
-            MenuManager.GS = GameState.LevelMenu;
-            CurrentLevel = CreateNewLevel();
+
+            try
+            {
+                System.Xml.Serialization.XmlSerializer writer = new System.Xml.Serialization.XmlSerializer(typeof(Level));
+                int Number = 0;
+                string path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "//PlatformerLevels//Level" + (Number + 1).ToString() + ".xml";
+                string folderpath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "//PlatformerLevels";
+
+                if (System.IO.Directory.Exists(folderpath))
+                    Number = System.IO.Directory.GetFiles(folderpath).Length;
+                else
+                    System.IO.Directory.CreateDirectory(folderpath);
+                
+                System.IO.FileStream DataStream = System.IO.File.Create(path);
+                writer.Serialize(DataStream, CurrentLevel);
+                DataStream.Close();
+            }
+            catch (Exception e)
+            {
+                System.Windows.Forms.MessageBox.Show(e.Message + "\n\n\n" + e.InnerException + "\n\n\n" + e.StackTrace);
+            }
+
+            //CurrentLevel = CreateNewLevel();
         }
         static Entity GetMouseHoveredElement()
         {
@@ -397,7 +418,7 @@ namespace Platformer
                             WindowHasBeenShownAfterFinishedEvolution = true;
                         }
 
-                        if (Controls.WasKeyJustPressed(Keys.R))
+                        if (Controls.WasKeyJustPressed(Keys.R) || Evolution_Manager.TestingLevel.Ending)
                         {
                             Evolution_Manager.TestingLevel.Reset();
                             Evolution_Manager.TestingLevel.ThisPlayer = Evolution_Manager.Best;

@@ -32,7 +32,7 @@ namespace Platformer.Neural_Network
 
         public override void Mutate()
         {
-            if (Values.RDM.NextDouble() < AI_Player.MutationProbability)
+            while (Values.RDM.NextDouble() < AI_Player.MutationProbability)
             {
                 weight += (float)Values.RDM.NextDouble() - 0.5f;
 
@@ -62,15 +62,19 @@ namespace Platformer.Neural_Network
 
         public override void Draw(SpriteBatch SB, Vector2 NeuronGrid_Middle, Vector2 NeuronGrid_Size)
         {
+            float Obiacy = 1;
+            if (Input.value == 0)
+                Obiacy = 0.1f;
+
             if (weight == 0)
                 Assets.DrawLine(Input.Pos * NeuronGrid_Size + NeuronGrid_Middle,
-                    Output.Pos * NeuronGrid_Size + NeuronGrid_Middle, 2, Color.Black, SB);
+                    Output.Pos * NeuronGrid_Size + NeuronGrid_Middle, 2, Color.Black * Obiacy, SB);
             else if (weight > 0)
                 Assets.DrawLine(Input.Pos * NeuronGrid_Size + NeuronGrid_Middle,
-                    Output.Pos * NeuronGrid_Size + NeuronGrid_Middle, 2, Color.Green, SB);
+                    Output.Pos * NeuronGrid_Size + NeuronGrid_Middle, 2, Color.Green * Obiacy, SB);
             else
                 Assets.DrawLine(Input.Pos * NeuronGrid_Size + NeuronGrid_Middle,
-                    Output.Pos * NeuronGrid_Size + NeuronGrid_Middle, 2, Color.Red, SB);
+                    Output.Pos * NeuronGrid_Size + NeuronGrid_Middle, 2, Color.Red * Obiacy, SB);
         }
 
         public object Clone(AI_Player ClonePlayer, AI_Player CurrentPlayer)

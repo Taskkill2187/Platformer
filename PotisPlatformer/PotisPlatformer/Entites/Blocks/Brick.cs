@@ -17,6 +17,10 @@ namespace Platformer
         int AnimState;
         const int AnimStates = 4;
 
+        public Brick()
+        {
+
+        }
         public Brick(Vector2 Pos, Level Parent) : base(Assets.Brick, Pos, true, Parent) { }
 
         public override void Activate()

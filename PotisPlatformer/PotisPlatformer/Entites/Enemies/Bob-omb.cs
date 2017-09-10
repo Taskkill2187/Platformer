@@ -16,6 +16,7 @@ namespace Platformer
         int ExplodingCounter;
         static int ExplosionRadius = 150;
 
+        public Bob_omb() { }
         public Bob_omb(int PosX, int PosY, Level Parent) : base(PosX, PosY, true, 2.5f, Parent)
         {
             WalkAnimStates = 2;

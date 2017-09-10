@@ -18,6 +18,7 @@ namespace Platformer
         KoopaColor Col = KoopaColor.Green;
         public bool HasShell;
 
+        public Koopa() { }
         public Koopa(int PosX, int PosY, KoopaColor Color, Level Parent) : base (PosX, PosY - 12, true, 3, Parent)
         {
             Rect.Height = (int)(28 * 3.62666f);
@@ -45,7 +46,7 @@ namespace Platformer
                 Vel += new Vector2(-7, 0);
 
             Rect.Height = (int)(16 * 4.533333f);
-            Rect.X += 48;
+            Rect.Y += 48;
         }
         public override void OnDeath()
         {
@@ -66,6 +67,9 @@ namespace Platformer
 
             if (Rect.X < 0)
                 FacingRight = true;
+
+            if (Rect.X + Rect.Width > Parent.End.X)
+                FacingRight = false;
 
             if (FacingRight)
             {
@@ -165,6 +169,9 @@ namespace Platformer
 
             if (Rect.X < 0)
                 FacingRight = true;
+
+            if (Rect.X + Rect.Width > Parent.End.X)
+                FacingRight = false;
 
             if (FacingRight)
             {
