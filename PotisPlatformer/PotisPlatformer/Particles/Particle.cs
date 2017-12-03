@@ -14,6 +14,8 @@ namespace Platformer
 {
     public class Particle
     {
+        public const int MinLifeTime = 105;
+        public const int MaxLifeTime = 200;
         public float GravForce;
         public int LifeTime;
         public Vector2 Friction = new Vector2(1.04f, 1.04f);
@@ -96,73 +98,79 @@ namespace Platformer
                 {
                     for (int i = 0; i < Parent.BlockList.Count; i++)
                     {
-                        if (Parent == null || i > Parent.BlockList.Count || Parent.BlockList[i] == null)
-                            break;
-
-                        if (Parent.BlockList[i].Rect.X > Pos.X - Level.BlockScale &&
-                            Parent.BlockList[i].Rect.X < Pos.X + Level.BlockScale)
+                        try
                         {
-                            Rectangle R = Parent.BlockList[i].Rect;
-                            if (Parent.BlockList[i].Collision && Parent.BlockList[i].GetType() != typeof(JumpBlock))
+                            if (Parent == null || i > Parent.BlockList.Count || Parent.BlockList[i] == null)
+                            break;
+                            
+                            Block Clone = (Block)Parent.BlockList[i].Clone();
+
+                            if (Clone.Rect.X > Pos.X - Level.BlockScale &&
+                                Clone.Rect.X < Pos.X + Level.BlockScale)
                             {
-                                // Top
-                                if (new Rectangle(R.X, R.Y, R.Width, 10).Intersects(new Rectangle((int)Pos.X - (int)Size.X / 2, (int)Pos.Y - (int)Size.Y / 2, (int)Size.X, (int)Size.Y)))
+                                Rectangle R = Clone.Rect;
+                                if (Clone.Collision && Clone.GetType() != typeof(JumpBlock))
                                 {
-                                    Pos.Y = R.Y - Size.Y / 2;
-                                    Vel.Y *= -0.5f;
-                                }
-
-                                // Left
-                                if (new Rectangle(R.X, R.Y, 10, R.Height).Intersects(new Rectangle((int)Pos.X - (int)Size.X / 2, (int)Pos.Y - (int)Size.Y / 2, (int)Size.X, (int)Size.Y)))
-                                {
-                                    Pos.X = Parent.BlockList[i].Rect.X - Size.X / 2;
-                                    Vel.X *= -0.5f;
-                                }
-
-                                // Bottom
-                                if (new Rectangle(R.X, R.Y + R.Height - 10, R.Width, 10).Intersects(new Rectangle((int)Pos.X - (int)Size.X / 2, (int)Pos.Y - (int)Size.Y / 2, (int)Size.X, (int)Size.Y)))
-                                {
-                                    Pos.Y = R.Y + R.Height + Size.Y / 2;
-                                    Vel.Y *= -0.5f;
-                                }
-
-                                // Right
-                                if (new Rectangle(R.X + R.Width - 10, R.Y, 10, R.Height).Intersects(new Rectangle((int)Pos.X - (int)Size.X / 2, (int)Pos.Y - (int)Size.Y / 2, (int)Size.X, (int)Size.Y)))
-                                {
-                                    Pos.X = R.X + R.Width + Size.X / 2;
-                                    Vel.X *= -0.5f;
-                                }
-                            }
-                            else
-                            {
-                                if (new Rectangle((int)Pos.X - (int)Size.X / 2, (int)Pos.Y - (int)Size.Y / 2, (int)Size.X, (int)Size.Y).Intersects(R) &&
-                                    Parent.BlockList[i].GetType() == typeof(JumpBlock))
-                                {
-                                    switch (((JumpBlock)Parent.BlockList[i]).Direction)
+                                    // Top
+                                    if (new Rectangle(R.X, R.Y, R.Width, 10).Intersects(new Rectangle((int)Pos.X - (int)Size.X / 2, (int)Pos.Y - (int)Size.Y / 2, (int)Size.X, (int)Size.Y)))
                                     {
-                                        case Direction.Up:
-                                            Vel.Y += -((JumpBlock)Parent.BlockList[i]).Strength / 5;
-                                            Vel.X /= ((JumpBlock)Parent.BlockList[i]).Friction;
-                                            break;
+                                        Pos.Y = R.Y - Size.Y / 2;
+                                        Vel.Y *= -0.5f;
+                                    }
 
-                                        case Direction.Down:
-                                            Vel.Y += ((JumpBlock)Parent.BlockList[i]).Strength / 5;
-                                            Vel.X /= ((JumpBlock)Parent.BlockList[i]).Friction;
-                                            break;
+                                    // Left
+                                    if (new Rectangle(R.X, R.Y, 10, R.Height).Intersects(new Rectangle((int)Pos.X - (int)Size.X / 2, (int)Pos.Y - (int)Size.Y / 2, (int)Size.X, (int)Size.Y)))
+                                    {
+                                        Pos.X = Clone.Rect.X - Size.X / 2;
+                                        Vel.X *= -0.5f;
+                                    }
 
-                                        case Direction.Left:
-                                            Vel.X += -((JumpBlock)Parent.BlockList[i]).Strength / 5;
-                                            Vel.Y /= ((JumpBlock)Parent.BlockList[i]).Friction;
-                                            break;
+                                    // Bottom
+                                    if (new Rectangle(R.X, R.Y + R.Height - 10, R.Width, 10).Intersects(new Rectangle((int)Pos.X - (int)Size.X / 2, (int)Pos.Y - (int)Size.Y / 2, (int)Size.X, (int)Size.Y)))
+                                    {
+                                        Pos.Y = R.Y + R.Height + Size.Y / 2;
+                                        Vel.Y *= -0.5f;
+                                    }
 
-                                        case Direction.Right:
-                                            Vel.X += ((JumpBlock)Parent.BlockList[i]).Strength / 5;
-                                            Vel.Y /= ((JumpBlock)Parent.BlockList[i]).Friction;
-                                            break;
+                                    // Right
+                                    if (new Rectangle(R.X + R.Width - 10, R.Y, 10, R.Height).Intersects(new Rectangle((int)Pos.X - (int)Size.X / 2, (int)Pos.Y - (int)Size.Y / 2, (int)Size.X, (int)Size.Y)))
+                                    {
+                                        Pos.X = R.X + R.Width + Size.X / 2;
+                                        Vel.X *= -0.5f;
+                                    }
+                                }
+                                else
+                                {
+                                    if (new Rectangle((int)Pos.X - (int)Size.X / 2, (int)Pos.Y - (int)Size.Y / 2, (int)Size.X, (int)Size.Y).Intersects(R) &&
+                                        Clone.GetType() == typeof(JumpBlock))
+                                    {
+                                        switch (((JumpBlock)Clone).Direction)
+                                        {
+                                            case Direction.Up:
+                                                Vel.Y += -((JumpBlock)Clone).Strength / 5;
+                                                Vel.X /= ((JumpBlock)Clone).Friction;
+                                                break;
+
+                                            case Direction.Down:
+                                                Vel.Y += ((JumpBlock)Clone).Strength / 5;
+                                                Vel.X /= ((JumpBlock)Clone).Friction;
+                                                break;
+
+                                            case Direction.Left:
+                                                Vel.X += -((JumpBlock)Clone).Strength / 5;
+                                                Vel.Y /= ((JumpBlock)Clone).Friction;
+                                                break;
+
+                                            case Direction.Right:
+                                                Vel.X += ((JumpBlock)Clone).Strength / 5;
+                                                Vel.Y /= ((JumpBlock)Clone).Friction;
+                                                break;
+                                        }
                                     }
                                 }
                             }
                         }
+                        catch { }
                     }
                 }
             }

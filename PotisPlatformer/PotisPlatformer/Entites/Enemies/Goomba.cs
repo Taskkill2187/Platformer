@@ -8,9 +8,11 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
+    [XmlInclude(typeof(Goomba))]
     public class Goomba : Enemy
     {
         public Goomba() { }
@@ -20,11 +22,16 @@ namespace Platformer
             WalkAnimStates = 10;
         }
 
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.Walker;
+            WalkAnimStates = 10;
+        }
         public override void OnDeath()
         {
             int index = Parent.EnemyList.IndexOf(this);
             Parent.EnemyList.RemoveAt(index);
-            ParticleManager.CreateParticleExplosionFromEntityTexture(this, new Rectangle(0, 0, 16, 16), 0.3f, -10f, !FacingRight, true, false, Parent);
+            ParticleManager.CreateParticleExplosion(this, new Rectangle(0, 0, 16, 16), 0.3f, 0.6f, !FacingRight, true, false, new Vector2(0, -7), Parent);
         }
         public override void Draw(SpriteBatch SB)
         {

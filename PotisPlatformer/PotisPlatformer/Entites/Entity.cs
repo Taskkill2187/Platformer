@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
@@ -16,16 +17,20 @@ namespace Platformer
         public Rectangle Rect;
         public Vector2 Vel;
         public Texture2D Texture;
+        public static int AnimStates = 0;
+        public Rectangle DrawingRectangle = new Rectangle();
 
         public Point CreatorClickPos;
 
-        //[XmlIgnore]
+        [XmlIgnore]
         public Level Parent;
 
         public Entity() { }
 
         public Vector2 GetPosVector2() { return new Vector2(Rect.X, Rect.Y); }
         public Vector2 GetSizeVector2() { return new Vector2(Rect.Width, Rect.Height); }
+
+        public virtual void UpdateTextureReference() { }
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {

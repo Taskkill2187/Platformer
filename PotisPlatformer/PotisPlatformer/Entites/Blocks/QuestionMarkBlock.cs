@@ -8,14 +8,16 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
+    [XmlInclude(typeof(QuestionMarkBlock))]
     public class QuestionMarkBlock : Block
     {
         int Timer;
         int AnimState;
-        const int AnimStates = 4;
+        public new int AnimStates = 4;
 
         Entity Content;
 
@@ -28,6 +30,10 @@ namespace Platformer
             this.Content = Content;
         }
 
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.QuestionMarkBlock;
+        }
         public override void Activate()
         {
             if (Content != null)
@@ -36,7 +42,7 @@ namespace Platformer
                 Content.Rect.Y = Rect.Y - Content.Rect.Height;
                 if (Content.GetType() == typeof(Coin))
                 {
-                    ParticleManager.CreateParticleExplosionFromEntityTexture(new Coin(new Vector2(Rect.X, Rect.Y - Level.BlockScale), Parent), new Rectangle(0, 0, 16, 16),
+                    ParticleManager.CreateParticleExplosion(new Coin(new Vector2(Rect.X, Rect.Y - Level.BlockScale), Parent), new Rectangle(0, 0, 16, 16),
                         -0.2f, 5f, false, true, false, Parent);
                     if (StoredData.Default.SoundEffects && Parent.IsDisplayed)
                         Assets.CoinSound.Play(0.75f, 0, 0);

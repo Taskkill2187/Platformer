@@ -24,6 +24,9 @@ namespace Platformer
         internal int Timer;
         public int DeathTimer;
 
+        public static int CollisionDetectionRectangleInflation = -20;
+        public static int CollisionDetectionRectangle2Inflation = -25;
+
         public Player() { }
         public Player(Vector2 Pos, Level Parent)
         {
@@ -48,7 +51,7 @@ namespace Platformer
                 if (AntiGravVel.Y > -5)
                     AntiGravVel.Y = -5;
                 Rectangle HalfFuture = new Rectangle(Rect.X + (int)AntiGravVel.X / 2, Rect.Y + (int)AntiGravVel.Y / 2, Rect.Width, Rect.Height);
-                HalfFuture.Inflate(-10, -10);
+                HalfFuture.Inflate(CollisionDetectionRectangleInflation, CollisionDetectionRectangleInflation);
                 if (!Parent.NoBlockIntersectsThisRectangle(HalfFuture))
                     Vel = Vector2.Zero;
 
@@ -101,13 +104,16 @@ namespace Platformer
                 Jump(false);
 
             if (Rect.Y > Values.WindowSize.Y && DeathTimer == 0)
+            {
+                Vel.Y = -15;
                 OnDeath();
+            }
 
             Vector2 AntiGravVel2 = Vel;
             if (AntiGravVel2.Y > -5)
                 AntiGravVel2.Y = -5;
             Rectangle HalfFuture2 = new Rectangle(Rect.X + (int)AntiGravVel2.X / 2, Rect.Y + (int)AntiGravVel2.Y / 2, Rect.Width, Rect.Height);
-            HalfFuture2.Inflate(-10, -10);
+            HalfFuture2.Inflate(CollisionDetectionRectangle2Inflation, CollisionDetectionRectangle2Inflation);
             if (!Parent.NoBlockIntersectsThisRectangle(HalfFuture2))
                 Vel = -Vel;
 
@@ -193,7 +199,7 @@ namespace Platformer
                     }
 
                     //TopLeft
-                    if (Parent.BlockList[i].Rect.Intersects(new Rectangle(this.Rect.X + 15, this.Rect.Y, 1, 1)))
+                    if (Parent.BlockList[i].Rect.Intersects(new Rectangle(this.Rect.X + 17, this.Rect.Y, 1, 1)))
                     {
                         Rect.Y = Parent.BlockList[i].Rect.Y + Parent.BlockList[i].Rect.Height;
                         if (Vel.Y < 0)
@@ -201,7 +207,7 @@ namespace Platformer
                     }
 
                     //TopRight
-                    if (Parent.BlockList[i].Rect.Intersects(new Rectangle(this.Rect.X + this.Rect.Width - 15, this.Rect.Y, 1, 1)))
+                    if (Parent.BlockList[i].Rect.Intersects(new Rectangle(this.Rect.X + this.Rect.Width - 17, this.Rect.Y, 1, 1)))
                     {
                         Rect.Y = Parent.BlockList[i].Rect.Y + Parent.BlockList[i].Rect.Height;
                         if (Vel.Y < 0)
@@ -232,19 +238,19 @@ namespace Platformer
                     }
 
                     //LeftBottom
-                    if (Parent.BlockList[i].Rect.Intersects(new Rectangle(this.Rect.X, this.Rect.Y + this.Rect.Height - 15, 1, -1)))
+                    if (Parent.BlockList[i].Rect.Intersects(new Rectangle(this.Rect.X, this.Rect.Y + this.Rect.Height - 17, 1, -1)))
                     {
                         Rect.X = Parent.BlockList[i].Rect.X + Parent.BlockList[i].Rect.Width;
                     }
 
                     //RightBottom
-                    if (Parent.BlockList[i].Rect.Intersects(new Rectangle(this.Rect.X + this.Rect.Width, this.Rect.Y + this.Rect.Height - 15, 1, -1)))
+                    if (Parent.BlockList[i].Rect.Intersects(new Rectangle(this.Rect.X + this.Rect.Width, this.Rect.Y + this.Rect.Height - 17, 1, -1)))
                     {
                         Rect.X = Parent.BlockList[i].Rect.X - Parent.BlockList[i].Rect.Width;
                     }
 
                     //BottomLeft
-                    if (Parent.BlockList[i].Rect.Intersects(new Rectangle(this.Rect.X + 15, this.Rect.Y + this.Rect.Height, 1, -1)))
+                    if (Parent.BlockList[i].Rect.Intersects(new Rectangle(this.Rect.X + 17, this.Rect.Y + this.Rect.Height, 1, -1)))
                     {
                         Rect.Y = Parent.BlockList[i].Rect.Y - this.Rect.Height;
                         TimesJumped = 0;
@@ -255,7 +261,7 @@ namespace Platformer
                     }
 
                     //BottomRight
-                    if (Parent.BlockList[i].Rect.Intersects(new Rectangle(this.Rect.X + this.Rect.Width - 15, this.Rect.Y + this.Rect.Height, 1, -1)))
+                    if (Parent.BlockList[i].Rect.Intersects(new Rectangle(this.Rect.X + this.Rect.Width - 17, this.Rect.Y + this.Rect.Height, 1, -1)))
                     {
                         Rect.Y = Parent.BlockList[i].Rect.Y - this.Rect.Height;
                         TimesJumped = 0;
@@ -301,7 +307,7 @@ namespace Platformer
                 Assets.Death.Play(0.8f, 0, 0);
             DeathTimer = 1;
             int SinlgeSegmentWidth = Texture.Width / WalkAnimStates;
-            ParticleManager.CreateParticleExplosionFromEntityTexture(this, new Rectangle(SinlgeSegmentWidth * WalkAnimState, 0, SinlgeSegmentWidth, Texture.Height), 
+            ParticleManager.CreateParticleExplosion(this, new Rectangle(SinlgeSegmentWidth * WalkAnimState, 0, SinlgeSegmentWidth, Texture.Height), 
                 0.3f, -12f, !FacingRight, true, false, Parent);
             Rect.Width = 0;
             CanMove = false;
@@ -309,7 +315,7 @@ namespace Platformer
             Vel = Vector2.Zero;
             Parent.Ending = false;
         }
-        public void Ressurection()
+        public virtual void Ressurection()
         {
             Vel = Vector2.Zero;
             Rect = new Rectangle((int)RespawnPoint.X, (int)RespawnPoint.Y, Level.BlockScale, (int)(Level.BlockScale * 1.75f));

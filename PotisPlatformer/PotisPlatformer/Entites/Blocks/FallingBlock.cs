@@ -8,9 +8,11 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
+    [XmlInclude(typeof(FallingBlock))]
     public class FallingBlock : Block
     {
         public bool Falling;
@@ -24,6 +26,11 @@ namespace Platformer
             this.Rect = new Rectangle((int)Pos.X, (int)Pos.Y, Level.BlockScale, Level.BlockScale);
             this.Vel = Vector2.Zero;
             Falling = false;
+        }
+
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.BlockGrass;
         }
 
         public override void Update()

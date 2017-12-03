@@ -8,17 +8,20 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer.Neural_Network
 {
+    [XmlInclude(typeof(Neuron))]
     public class Neuron : NeuralNetworkEntity, ICloneable
     {
         public float value; // should be between -1 and 1
         public Vector2 Pos;
-        public const float Size = 10;
+        public const float Size = 8;
         public string Name;
         public float startValue;
 
+        public Neuron() { }
         public Neuron(Vector2 Pos)
         {
             this.Pos = Pos;
@@ -52,15 +55,16 @@ namespace Platformer.Neural_Network
         public override void Update()
         {
             value = (float)(2 / (1 + Math.Exp(-2 * value)) - 1) + startValue;
+            //if (value < 0.075f && value > -0.075f) value = 0;
         }
         public override void Draw(SpriteBatch SB, Vector2 NeuronGrid_Middle, Vector2 NeuronGrid_Size)
         {
             if (value == 0)
-                Assets.DrawCircle(Pos * NeuronGrid_Size + NeuronGrid_Middle, Size, Color.White * 0.5f, SB);
+                Assets.DrawCircle(Pos * NeuronGrid_Size + NeuronGrid_Middle, Size, Color.White * 0.2f, SB);
             else if (value > 0)
-                Assets.DrawCircle(Pos * NeuronGrid_Size + NeuronGrid_Middle, Size, Color.White, SB);
+                Assets.DrawCircle(Pos * NeuronGrid_Size + NeuronGrid_Middle, Size, Color.Lerp(Color.Gray, Color.White, value), SB);
             else
-                Assets.DrawCircle(Pos * NeuronGrid_Size + NeuronGrid_Middle, Size, Color.Black, SB);
+                Assets.DrawCircle(Pos * NeuronGrid_Size + NeuronGrid_Middle, Size, Color.Lerp(Color.DarkGray, Color.Black, -value), SB);
 
             if (!string.IsNullOrEmpty(Name))
                 SB.DrawString(Assets.SmallFont, Name, Pos * NeuronGrid_Size + NeuronGrid_Middle + new Vector2(5, -Assets.SmallFont.MeasureString(Name).Y / 2), Color.Black);

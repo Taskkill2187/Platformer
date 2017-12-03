@@ -8,12 +8,14 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
-    enum KoopaColor { Green, Red, Blue }
+    public enum KoopaColor { Green, Red, Blue }
 
-    class Koopa : Enemy
+    [XmlInclude(typeof(Koopa))]
+    public class Koopa : Enemy
     {
         KoopaColor Col = KoopaColor.Green;
         public bool HasShell;
@@ -38,6 +40,8 @@ namespace Platformer
         public void OnShellLoss()
         {
             HasShell = false;
+            ParticleManager.CreateParticleExplosion(this, new Rectangle(16 * WalkAnimState, 0, 16, Texture.Height),
+                0.3f, 1f, true, true, false, new Vector2(0, -7), Parent);
             Parent.EnemyList.Add(new Shell(Rect.X, Rect.Y + Rect.Height/2, Col, !FacingRight, Parent));
 
             if (FacingRight)
@@ -54,10 +58,15 @@ namespace Platformer
                 OnShellLoss();
             else
             {
-                ParticleManager.CreateParticleExplosionFromEntityTexture(this, new Rectangle(16 * WalkAnimState + 17 * 2, Texture.Height / 2, 16, Texture.Height / 2), 
+                ParticleManager.CreateParticleExplosion(this, new Rectangle(16 * WalkAnimState + 17 * 2, Texture.Height / 2, 16, Texture.Height / 2), 
                     0.3f, 0.6f, true, true, false, Parent);
                 Parent.EnemyList.Remove(this);
             }
+        }
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.GreenKoopa;
+            WalkAnimStates = 2;
         }
 
         public override void Update()
@@ -113,7 +122,7 @@ namespace Platformer
             }
         }
     }
-    class Shell : Enemy
+    public class Shell : Enemy
     {
         KoopaColor Col = KoopaColor.Green;
         public Shell(int PosX, int PosY, KoopaColor Color, bool FacingRight, Level Parent) : base (PosX, PosY, FacingRight, 10, Parent)
@@ -125,7 +134,7 @@ namespace Platformer
 
         public override void OnDeath()
         {
-            ParticleManager.CreateParticleExplosionFromEntityTexture(this, new Rectangle(17 * WalkAnimState, 12, 16, 16), 0.3f, 0.3f, FacingRight, true, false, Parent);
+            ParticleManager.CreateParticleExplosion(this, new Rectangle(17 * WalkAnimState, 12, 16, 16), 0.3f, 0.3f, FacingRight, true, false, Parent);
             Parent.EnemyList.Remove(this);
         }
         public override void CheckForCollision()
@@ -161,6 +170,11 @@ namespace Platformer
                 }
             }
         }
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.GreenShell;
+            WalkAnimStates = 2;
+        }
 
         public override void Update()
         {
@@ -193,7 +207,7 @@ namespace Platformer
             {
                 for (int i = 0; i < Parent.EnemyList.Count; i++)
                 {
-                    if (Parent.EnemyList[i] != this && Parent.EnemyList[i].Rect.Intersects(Rect))
+                    if (Parent.EnemyList[i].GetType() != typeof(Shell) && Parent.EnemyList[i].Rect.Intersects(Rect))
                     {
                         Parent.EnemyList[i].OnDeath();
                     }

@@ -9,6 +9,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System.IO;
+using System.Windows.Forms;
+using System.Xml.Serialization;
+using Platformer.Neural_Network;
 
 namespace Platformer
 {
@@ -32,13 +35,29 @@ namespace Platformer
 
             string path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "//PlatformerLevels";
             if (Directory.Exists(path))
-                foreach (string F in System.IO.Directory.GetFiles(path))
+                foreach (string F in Directory.GetFiles(path))
                 {
-                    System.Xml.Serialization.XmlSerializer reader =
-                        new System.Xml.Serialization.XmlSerializer(typeof(Level));
-                    System.IO.StreamReader DataStream = new System.IO.StreamReader(F);
-                    Level overview = (Level)reader.Deserialize(DataStream);
-                    DataStream.Close();
+                    StreamReader DataStream = null;
+                    try
+                    {
+                        XmlSerializer reader = new XmlSerializer(typeof(Level), new Type[] { typeof(Block), typeof(Brick),
+                            typeof (Coin), typeof(JumpBlock), typeof(Kugelwilli_Spawner), typeof(QuestionMarkBlock), typeof(SpinningBlock),
+                            typeof(Bob_omb), typeof(Enemy), typeof(Goomba), typeof(Koopa), typeof(Kugelwilli), typeof(Player), typeof(AI_Player),
+                            typeof(Axon), typeof(Neuron), typeof(NeuralNetworkEntity)});
+                        DataStream = new StreamReader(F);
+                        LvlList.Add((Level)reader.Deserialize(DataStream));
+
+                        LvlList.Last().UpdateXmlLoadedEntites();
+
+                        DataStream.Close();
+                    }
+                    catch
+                    {
+                        if (DataStream != null)
+                            DataStream.Close();
+                        MessageBox.Show("File: " + F + " is corrupted and will be terminated!");
+                        File.Delete(F);
+                    }
                 }
         }
 

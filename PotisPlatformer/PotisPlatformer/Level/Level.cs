@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Platformer.Neural_Network;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
@@ -58,7 +59,10 @@ namespace Platformer
         public List<Enemy> EnemyList = new List<Enemy>();
         public List<Enemy> EnemyList0 = new List<Enemy>();
         public Vector2 End;
+
+        [XmlIgnore]
         public Player ThisPlayer;
+
         public bool Ending;
         public bool SaidEndingPhrase;
         public bool IsDisplayed;
@@ -74,7 +78,8 @@ namespace Platformer
 
         public Vector2 PlayerPos;
         public Texture2D Background;
-
+        
+        [XmlIgnore]
         Player LastPlayerCopy;
 
         public Level()
@@ -201,31 +206,32 @@ namespace Platformer
                     E.Rect.Height > BlockScale && E.Rect.X / BlockScale == Coords.X && E.Rect.Y / BlockScale + 1 == Coords.Y)
                     return -1;
 
+
             foreach (Block B in BlockList)
                 if (B.Rect.X / BlockScale == Coords.X && B.Rect.Y / BlockScale == Coords.Y ||
                     B.Rect.Height > BlockScale && B.Rect.X / BlockScale == Coords.X && B.Rect.Y / BlockScale + 1 == Coords.Y)
-                    return 1;
+                    if (B.GetType() == typeof(FallingBlock) && ((FallingBlock)B).Falling)
+                        return -0.5f;
+                    else if (B.GetType() == typeof(JumpBlock))
+                        return 0.25f;
+                    else if (B.GetType() == typeof(Brick))
+                        return 0.9f;
+                    else if (B.GetType() == typeof(Coin))
+                        return 0.4f;
+                    else if (B.GetType() == typeof(SpinningBlock) && !((SpinningBlock)B).Collision)
+                        return 0.15f;
+                    else if (B.GetType() == typeof(SpinningBlock) && ((SpinningBlock)B).Collision)
+                        return 0.85f;
+                    else
+                        return 1;
             
             return 0;
-        }
-        Neuron[,] GetNeuronValuesForTheseCoords(Point[,] Coords, Neuron[,] InputArray)
-        {
-            Neuron[,] NeuronArray = new Neuron[Coords.GetLength(0), Coords.GetLength(1)];
-
-            for (int x = 0; x < Coords.GetLength(0); x++)
-                for (int y = 0; y < Coords.GetLength(1); y++)
-                {
-                    NeuronArray[x, y] = new Neuron(InputArray[x, y].Pos);
-
-                }
-
-            return NeuronArray;
         }
         public bool NoBlockIntersectsThisRectangle(Rectangle Rect)
         {
             for (int i = 0; i < BlockList.Count; i++)
             {
-                if (BlockList[i].Rect.Intersects(Rect))
+                if (BlockList[i].Collision && BlockList[i].Rect.Intersects(Rect))
                     return false;
             }
             return true;
@@ -233,6 +239,7 @@ namespace Platformer
 
         public void UpdateCameraPos()
         {
+            CameraFollowingOnYAxis = true;
             Camera.X = -ThisPlayer.Rect.X + Values.WindowSize.X / 2;
 
             if (Camera.X > 0)
@@ -240,7 +247,7 @@ namespace Platformer
 
             if (CameraFollowingOnYAxis)
             {
-                Camera.Y = -ThisPlayer.Rect.Y + Values.WindowSize.Y / 2;
+                Camera.Y = -ThisPlayer.Rect.Y + Values.WindowSize.Y / 4;
 
                 if (Camera.Y < 0)
                     Camera.Y = 0;
@@ -255,7 +262,7 @@ namespace Platformer
 
             if (CameraFollowingOnYAxis)
             {
-                Camera.Y = -ManualTarget.Y + Values.WindowSize.Y / 2;
+                Camera.Y = -ManualTarget.Y + Values.WindowSize.Y / 4;
 
                 if (Camera.Y < 0)
                     Camera.Y = 0;
@@ -294,7 +301,7 @@ namespace Platformer
             {
                 SB.DrawString(Assets.Font, new Vector2((Controls.CurMS.X - (int)Camera.X) / BlockScale, (Controls.CurMS.Y - (int)Camera.Y) / BlockScale).ToString(), new Vector2(12, 12), Color.White);
             }
-            SB.DrawString(Assets.Font, "Score: " + Score.ToString(), new Vector2(Values.WindowSize.X - 12 - Assets.Font.MeasureString("Score: " + Score.ToString()).X, 12), Color.White);
+            //SB.DrawString(Assets.Font, "Score: " + Score.ToString(), new Vector2(Values.WindowSize.X - 12 - Assets.Font.MeasureString("Score: " + Score.ToString()).X, 12), Color.White);
         }
 
         public void Reset()
@@ -344,6 +351,8 @@ namespace Platformer
             }
             L.Reset();
             Reset();
+            Ending = false;
+            L.Ending = false;
             L.ThisPlayer = null;
             L.End = new Vector2(End.X, End.Y);
             L.Score = 0;
@@ -362,6 +371,34 @@ namespace Platformer
                 EnemyList0.Add((Enemy)E.Clone());
             }
             Reset();
+        }
+        public void UpdateXmlLoadedEntites()
+        {
+            foreach (Block B in BlockList)
+            {
+                B.Parent = this;
+                B.UpdateTextureReference();
+            }
+            foreach (Block B in BlockList0)
+            {
+                B.Parent = this;
+                B.UpdateTextureReference();
+            }
+            foreach (Enemy E in EnemyList)
+            {
+                E.Parent = this;
+                E.UpdateTextureReference();
+            }
+            foreach (Enemy E in EnemyList0)
+            {
+                E.Parent = this;
+                E.UpdateTextureReference();
+            }
+
+            if (ThisPlayer != null)
+                ThisPlayer.Parent = this;
+            if (LastPlayerCopy != null)
+                LastPlayerCopy.Parent = this;
         }
     }
 }

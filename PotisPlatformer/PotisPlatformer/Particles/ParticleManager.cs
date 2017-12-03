@@ -45,7 +45,8 @@ namespace Platformer
             }
         }
 
-        public static void CreateParticleExplosionFromEntityTexture(Entity E, Rectangle TexelField, float GravForce, float DriftSpeed, bool FlipHorz, bool Collision, bool Anim, Level Parent)
+        public static void CreateParticleExplosion(Entity E, Rectangle TexelField, float GravForce, 
+            float DriftSpeed, bool FlipHorz, bool Collision, bool Anim, Level Parent)
         {
             if (StoredData.Default.ParticleEffects && Parent.IsDisplayed)
             {
@@ -74,18 +75,11 @@ namespace Platformer
                                 Point = new Vector2(TexelField.Width - (ix - TexelField.X), iy - TexelField.Y);
                             else
                                 Point = new Vector2(ix - TexelField.X, iy - TexelField.Y);
-
-                            int LifeTime;
-
-                            if (Anim)
-                                LifeTime = Values.RDM.Next(175, 230);
-                            else
-                                LifeTime = Values.RDM.Next(0, 50);
-
+                            
                             // Construktor                                                              Adding the Entity Position to the Point
                             PArray[(int)Point.X + (int)Point.Y * Col2D.GetLength(1) - 1] = new Particle(Point * PixelSize + E.GetPosVector2(),
                                 // Lifetime
-                                Values.RDM.Next(175, 230),
+                                Values.RDM.Next(Particle.MinLifeTime, Particle.MaxLifeTime),
                                 // Texture    Color
                                 Assets.White, Col2D[ix, iy],
                                 // Velocity
@@ -103,7 +97,8 @@ namespace Platformer
                     AddParticleBatch(new ParticleBatch(PArray, E.GetPosVector2() + E.GetSizeVector2() / 2, 0, 0, 0, 0));
             }
         }
-        public static void CreateParticleExplosionFromEntityTexture(Entity E, Rectangle TexelField, float GravForce, float DriftSpeed, bool FlipHorz, bool Collision, bool Anim, Vector2 StartSpeed, Level Parent)
+        public static void CreateParticleExplosion(Entity E, Rectangle TexelField, float GravForce, 
+            float DriftSpeed, bool FlipHorz, bool Collision, bool Anim, Vector2 StartSpeed, Level Parent)
         {
             if (StoredData.Default.ParticleEffects && Parent.IsDisplayed)
             {
@@ -132,18 +127,11 @@ namespace Platformer
                                 Point = new Vector2(TexelField.Width - (ix - TexelField.X), iy - TexelField.Y);
                             else
                                 Point = new Vector2(ix - TexelField.X, iy - TexelField.Y);
-
-                            int LifeTime;
-
-                            if (Anim)
-                                LifeTime = Values.RDM.Next(175, 230);
-                            else
-                                LifeTime = Values.RDM.Next(0, 50);
-
+                            
                             // Construktor                                                              Adding the Entity Position to the Point
                             PArray[(int)Point.X + (int)Point.Y * Col2D.GetLength(1) - 1] = new Particle(Point * PixelSize + E.GetPosVector2(),
                                 // Lifetime
-                                Values.RDM.Next(175, 230),
+                                Values.RDM.Next(Particle.MinLifeTime, Particle.MaxLifeTime),
                                 // Texture    Color
                                 Assets.White, Col2D[ix, iy],
                                 // Velocity
@@ -154,6 +142,66 @@ namespace Platformer
                         }
                     }
                 }
+
+                if (Anim)
+                    AddParticleBatch(new ParticleBatch(PArray, E.GetPosVector2() + E.GetSizeVector2() / 2, 0, 100, 0.5f, 0.02f));
+                else
+                    AddParticleBatch(new ParticleBatch(PArray, E.GetPosVector2() + E.GetSizeVector2() / 2, 0, 0, 0, 0));
+            }
+        }
+        public static void CreateParticleExplosion(Entity E, Rectangle TexelField, float GravForce, 
+            bool FlipHorz, bool Collision, bool Anim, Vector2 StartSpeed, Vector2 ExplosionOrigin, Level Parent)
+        {
+            if (StoredData.Default.ParticleEffects && Parent.IsDisplayed)
+            {
+                float PixelSize = E.Rect.Width / (float)TexelField.Width;
+
+                Color[] Col1D = new Color[E.Texture.Width * E.Texture.Height];
+                E.Texture.GetData(Col1D);
+
+                Color[,] Col2D = new Color[E.Texture.Width, E.Texture.Height];
+
+                for (int i = 0; i < Col1D.Length; i++)
+                    Col2D[i % E.Texture.Width, i / E.Texture.Width] = Col1D[i];
+
+                Particle[] PArray = new Particle[Col2D.Length];
+
+                try
+                {
+                    for (int ix = TexelField.X; ix < TexelField.Width + TexelField.X; ix++)
+                    {
+                        for (int iy = TexelField.Y; iy < TexelField.Height + TexelField.Y; iy++)
+                        {
+                            // Only create a Particle if it's a visible Texel
+                            if (Col2D[ix, iy].A != 0 || Col2D[ix, iy].ToVector3() != Vector3.Zero)
+                            {
+                                Vector2 Point;
+
+                                if (FlipHorz)
+                                    Point = new Vector2(TexelField.Width - (ix - TexelField.X), iy - TexelField.Y);
+                                else
+                                    Point = new Vector2(ix - TexelField.X, iy - TexelField.Y);
+
+                                Vector2 Diff = (Point * PixelSize + E.GetPosVector2()) - ExplosionOrigin;
+                                Diff.Normalize();
+                                Diff *= (1 / Diff.Length()) * 10;
+
+                                // Construktor                                                              Adding the Entity Position to the Point
+                                PArray[(int)Point.X + (int)Point.Y * Col2D.GetLength(1) - 1] = new Particle(Point * PixelSize + E.GetPosVector2(),
+                                    // Lifetime
+                                    Values.RDM.Next(Particle.MinLifeTime, Particle.MaxLifeTime),
+                                    // Texture    Color
+                                    Assets.White, Col2D[ix, iy],
+                                    // Velocity
+                                    E.Vel + StartSpeed + Diff,
+                                    GravForce,
+                                    // Friction                Size
+                                    new Vector2(1.002f, 1.002f), new Vector2(PixelSize), Collision, Parent);
+                            }
+                        }
+                    }
+                }
+                catch { }
 
                 if (Anim)
                     AddParticleBatch(new ParticleBatch(PArray, E.GetPosVector2() + E.GetSizeVector2() / 2, 0, 100, 0.5f, 0.02f));
@@ -172,7 +220,7 @@ namespace Platformer
                     float Strength = Values.RDM.Next(0, 1000);
                     Strength /= 100;
                     PArray[ip] = new Particle(Pos, new Vector2((float)Math.Sin(Angle) * Strength,
-                        (float)Math.Cos(Angle) * Strength) + Vel + new Vector2(0, -2), Col, 0.02f, 50 + Values.RDM.Next(30), Parent);
+                        (float)Math.Cos(Angle) * Strength) + Vel + new Vector2(0, -2), Col, 0.02f, Values.RDM.Next(Particle.MinLifeTime, Particle.MaxLifeTime), Parent);
                 }
                 AddParticleBatch(new ParticleBatch(PArray, Pos, 0, 0, 0, 0));
             }

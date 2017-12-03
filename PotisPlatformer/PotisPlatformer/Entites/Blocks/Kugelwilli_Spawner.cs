@@ -8,9 +8,11 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
+    [XmlInclude(typeof(Kugelwilli_Spawner))]
     public class Kugelwilli_Spawner : Block
     {
         int SpawnTimer;
@@ -18,6 +20,11 @@ namespace Platformer
 
         public Kugelwilli_Spawner() { }
         public Kugelwilli_Spawner(Vector2 Pos, Level Parent) : base(Assets.KugelWilli_Spawner, Pos, true, Parent) { Rect.Height *= 2; }
+
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.KugelWilli_Spawner;
+        }
 
         public override void Update()
         {

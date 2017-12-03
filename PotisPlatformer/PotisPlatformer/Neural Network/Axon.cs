@@ -8,19 +8,38 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer.Neural_Network
 {
+    [XmlInclude(typeof(Axon))]
     public class Axon : NeuralNetworkEntity, ICloneable
     {
-        public Neuron Input, Output;
+        bool InputFromInputNeurons;
+        int InputIndex, OutputIndex, ParentIndex;
         public float weight; // should be between -1 and 1
 
-        public Axon(Neuron Input, Neuron Output)
+        [XmlIgnore]
+        public AI_Player Parent;
+        [XmlIgnore]
+        public Neuron Input;
+        [XmlIgnore]
+        public Neuron Output;
+
+        public Axon () { }
+        public Axon(Neuron Input, Neuron Output, AI_Player Parent)
         {
-            this.Input = Input;
+            this.Parent = Parent;
             this.Output = Output;
+            this.Input = Input;
+            
             weight = (float)Values.RDM.NextDouble() * 2 - 1;
+
+            if (!Parent.Neurons.Contains(Output))
+                throw new Exception();
+
+            if (!Parent.Neurons.Contains(Input) && !Parent.InputNeurons.Contains(Input))
+                throw new Exception();
 
             if (Input.Pos.X > Output.Pos.X)
             {
@@ -34,7 +53,7 @@ namespace Platformer.Neural_Network
         {
             while (Values.RDM.NextDouble() < AI_Player.MutationProbability)
             {
-                weight += (float)Values.RDM.NextDouble() - 0.5f;
+                weight += (float)((Values.RDM.NextDouble() - 0.5f) * AI_Player.MutationStepSize);
 
                 if (weight > AI_Player.MaxAxonWeight)
                     weight = AI_Player.MaxAxonWeight;
@@ -47,12 +66,47 @@ namespace Platformer.Neural_Network
         {
             if (Input.Pos.X > Output.Pos.X)
             {
-                Neuron Test = Input;
+                Neuron Temp = Input;
                 Input = Output;
-                Output = Test;
+                Output = Temp;
             }
 
             return Input.Pos.X + float.Epsilon;
+        }
+
+        public void PrepareForXMLSave()
+        {
+            ParentIndex = Evolution_Manager.Population.IndexOf(Parent);
+
+            if (Parent.Neurons.Contains(Input))
+            {
+                InputFromInputNeurons = false;
+                InputIndex = Parent.Neurons.IndexOf(Input);
+            }
+            else
+            {
+                InputFromInputNeurons = true;
+                InputIndex = Parent.InputNeurons.ToList().IndexOf(Input);
+            }
+
+            if (InputIndex == -1 || InputIndex >= Parent.Neurons.Count && InputFromInputNeurons == false)
+                throw new Exception();
+
+            this.OutputIndex = Parent.Neurons.IndexOf(Output);
+
+            if (OutputIndex == -1 || OutputIndex >= Parent.Neurons.Count)
+                throw new Exception();
+        }
+        public void LoadAfterCreationFromXML(AI_Player Parent)
+        {
+            this.Parent = Parent;
+
+            if (InputFromInputNeurons)
+                Input = Parent.InputNeurons[InputIndex];
+            else
+                Input = Parent.Neurons[InputIndex];
+
+            Output = Parent.Neurons[OutputIndex];
         }
 
         public override void Update()
@@ -80,7 +134,8 @@ namespace Platformer.Neural_Network
         public object Clone(AI_Player ClonePlayer, AI_Player CurrentPlayer)
         {
             Axon A = (Axon)this.MemberwiseClone();
-
+            A.Parent = ClonePlayer;
+            
             int InputIndex = 0;
             int OutputIndex = CurrentPlayer.Neurons.IndexOf(Output);
 
@@ -98,19 +153,16 @@ namespace Platformer.Neural_Network
             }
             else
             {
-                int InputIndexY = 0;
                 for (int x = 0; x < CurrentPlayer.InputNeurons.GetLength(0); x++)
-                    for (int y = 0; y < CurrentPlayer.InputNeurons.GetLength(1); y++)
-                        if (CurrentPlayer.InputNeurons[x, y] == Input)
-                        {
-                            InputIndex = x;
-                            InputIndexY = y;
-                        }
+                    if (CurrentPlayer.InputNeurons[x] == Input)
+                    {
+                        InputIndex = x;
+                    }
                 
-                A.Input = ClonePlayer.InputNeurons[InputIndex, InputIndexY];
+                A.Input = ClonePlayer.InputNeurons[InputIndex];
                 A.Output = ClonePlayer.Neurons[OutputIndex];
             }
-
+            
             return A;
         }
         public object Clone()

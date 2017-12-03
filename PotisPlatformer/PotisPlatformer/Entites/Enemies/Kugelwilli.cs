@@ -8,9 +8,11 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
+    [XmlInclude(typeof(Kugelwilli))]
     public class Kugelwilli : Enemy
     {
         public Kugelwilli() { }
@@ -21,8 +23,13 @@ namespace Platformer
         {
             Parent.EnemyList.Remove(this);
             if (StoredData.Default.ParticleEffects && Parent.IsDisplayed)
-                ParticleManager.CreateParticleExplosionFromEntityTexture(this, new Rectangle(0, 0, 17, 14), 0.4f, 0.01f, FacingRight, true, false, new Vector2(0, -4), Parent);
+                ParticleManager.CreateParticleExplosion(this, new Rectangle(0, 0, 17, 14), 0.4f, 0.01f, FacingRight, true, false, new Vector2(0, -4), Parent);
         }
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.KugelWilli;
+        }
+
         public override void Update()
         {
             if (FacingRight)

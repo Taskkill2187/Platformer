@@ -8,14 +8,16 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
+    [XmlInclude(typeof(Brick))]
     public class Brick : Block
     {
         int Timer;
         int AnimState;
-        const int AnimStates = 4;
+        public static new int AnimStates = 4;
 
         public Brick()
         {
@@ -25,9 +27,13 @@ namespace Platformer
 
         public override void Activate()
         {
-            ParticleManager.CreateParticleExplosionFromEntityTexture(this, new Rectangle(0, 0, 16, 16), 0.3f, 1.3f, false, true, false, Parent);
+            ParticleManager.CreateParticleExplosion(this, new Rectangle(0, 0, 16, 16), 0.3f, 1.3f, false, true, false, Parent);
             Parent.BlockList.Remove(this);
             Parent.ThisPlayer.Vel.Y = 0;
+        }
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.Brick;
         }
 
         public override void Update()

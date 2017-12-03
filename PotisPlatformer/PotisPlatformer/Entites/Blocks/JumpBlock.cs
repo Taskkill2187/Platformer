@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
@@ -19,6 +20,7 @@ namespace Platformer
         Left
     }
 
+    [XmlInclude(typeof(JumpBlock))]
     public class JumpBlock : Block
     {
         public Direction Direction;
@@ -49,6 +51,11 @@ namespace Platformer
             this.Strength = Strength;
             this.Vel = Vector2.Zero;
             this.Friction = Friction;
+        }
+
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.JumpBlock;
         }
 
         public override void Update()

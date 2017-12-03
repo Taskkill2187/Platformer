@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System.Windows.Forms;
+using Platformer.Neural_Network;
 
 namespace Platformer
 {
@@ -18,6 +19,7 @@ namespace Platformer
         SpriteBatch spriteBatch;
 
         public static Form gameWindowForm;
+        public static bool Show = false;
 
         public XNA()
         {
@@ -35,6 +37,7 @@ namespace Platformer
             LevelDataStorage.BuildLevels();
             MenuManager.BuildMenus();
             MenuManager.GS = GameState.MainMenu;
+            //Evolution_Manager.LoadPopulationFromFile();
         }
         protected override void OnExiting(Object sender, EventArgs args)
         {
@@ -54,6 +57,14 @@ namespace Platformer
         
         protected override void Update(GameTime gameTime)
         {
+            if (Show)
+            {
+                Values.ShowWindow(gameWindowForm.Handle, 5);
+                gameWindowForm.BringToFront();
+                gameWindowForm.Activate();
+                Show = false;
+            }
+
             Controls.Update();
 
             ParticleManager.Update();

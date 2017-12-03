@@ -8,14 +8,16 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
+    [XmlInclude(typeof(Coin))]
     public class Coin : Block
     {
         int Timer;
         int AnimState;
-        const int AnimStates = 4;
+        public static new int AnimStates = 4;
 
         public Coin()
         {
@@ -26,6 +28,11 @@ namespace Platformer
 
         }
 
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.Coin;
+        }
+
         public override void Update()
         {
             if (Rect.Intersects(Parent.ThisPlayer.Rect))
@@ -33,7 +40,7 @@ namespace Platformer
                 Parent.BlockList.Remove(this);
                 if (StoredData.Default.SoundEffects && Parent.IsDisplayed)
                     Assets.CoinSound.Play(0.75f, 0, 0);
-                ParticleManager.CreateParticleExplosionFromEntityTexture(this, new Rectangle(AnimState * 16, 0, 16, 16), 0, 5f, false, true, true, Parent);
+                ParticleManager.CreateParticleExplosion(this, new Rectangle(AnimState * 16, 0, 16, 16), 0, 5f, false, true, true, Parent);
                 Parent.Score += 100;
             }
 

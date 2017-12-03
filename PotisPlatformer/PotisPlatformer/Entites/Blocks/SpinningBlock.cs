@@ -8,17 +8,24 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
+    [XmlInclude(typeof(SpinningBlock))]
     public class SpinningBlock : Block
     {
         int Timer;
         int AnimState;
-        const int AnimStates = 8;
+        public static new int AnimStates = 8;
 
         public SpinningBlock() { }
         public SpinningBlock(Vector2 Pos, Level Parent) : base(Assets.SpinningBlock, Pos, true, Parent) { }
+
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.SpinningBlock;
+        }
 
         public override void Update()
         {

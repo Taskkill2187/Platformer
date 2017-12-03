@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System.Diagnostics;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
@@ -23,6 +24,7 @@ namespace Platformer
         FreeLeftRight,
         FreeLeftRightTop,
     }
+    [XmlInclude(typeof(Block))]
     public class Block : Entity, ICloneable
     {
         public bool Collision;
@@ -192,6 +194,10 @@ namespace Platformer
         public override object Clone()
         {
             return MemberwiseClone();
+        }
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.BlockGrass;
         }
 
         public virtual void Update()

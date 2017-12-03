@@ -9,21 +9,24 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System.Diagnostics;
+using System.Xml.Serialization;
 
 namespace Platformer.Neural_Network
 {
+    [XmlInclude(typeof(AI_Player))]
     public class AI_Player : Player, ICloneable
     {
         const int InputSizeSqrt = 11;
         public float Fitness = 0;
-
-        public Neuron[,] InputNeurons = new Neuron[InputSizeSqrt, InputSizeSqrt];
+        
+        public Neuron[] InputNeurons = new Neuron[InputSizeSqrt * InputSizeSqrt];
         public List<Neuron> Neurons = new List<Neuron>();
         public List<Axon> Axons = new List<Axon>();
         public List<NeuralNetworkEntity> Entities = new List<NeuralNetworkEntity>();
 
         // Mutations
         public static double MutationProbability = 0.3; // is changed by evolution manager
+        public static double MutationStepSize = 0.3; // is changed by evolution manager
         public static float MinAxonWeight = -1;
         public static float MaxAxonWeight = 1;
 
@@ -33,13 +36,18 @@ namespace Platformer.Neural_Network
         public Neuron LeftNeuron;
         public Neuron JumpNeuron;
 
-        Vector2 NeuronGrid_Middle, NeuronGrid_Size;
+        public Vector2 NeuronGrid_Middle, NeuronGrid_Size;
 
+        // Debug
+        [XmlIgnore]
         static long CurrentDebugTime = 0;
+        [XmlIgnore]
+        Neuron[,] LastInputNeurons = null;
 
+        public AI_Player() : base() { }
         public AI_Player(Vector2 StartingPos, Level Parent, Vector2 NeuronGrid_Middle, Vector2 NeuronGrid_Size) : base(StartingPos, Parent)
         {
-            InputNeurons = new Neuron[InputSizeSqrt, InputSizeSqrt];
+            InputNeurons = new Neuron[InputSizeSqrt * InputSizeSqrt];
             Neurons = new List<Neuron>();
             Axons = new List<Axon>();
             Entities = new List<NeuralNetworkEntity>();
@@ -49,7 +57,7 @@ namespace Platformer.Neural_Network
             // Add Input Neurons
             for (int x = 0; x < InputSizeSqrt; x++)
                 for (int y = 0; y < InputSizeSqrt; y++)
-                    InputNeurons[x, y] = new Neuron(new Vector2((x / NeuronGrid_Size.X * Neuron.Size * 1.5f) - 2.1f, 
+                    InputNeurons[x * InputSizeSqrt + y] = new Neuron(new Vector2((x / NeuronGrid_Size.X * Neuron.Size * 1.5f) - 2.1f, 
                         y / NeuronGrid_Size.Y * Neuron.Size * 1.5f));
             
             // Add Neurons
@@ -57,10 +65,10 @@ namespace Platformer.Neural_Network
             for (int i = 0; i < NeuronCount; i++)
                 Neurons.Add(new Neuron(new Vector2((float)(Values.RDM.NextDouble() * 2 - 1), (float)(Values.RDM.NextDouble() * 2 - 1))));
 
-            RightNeuron = new Neuron(new Vector2(1.1f, Neuron.Size / NeuronGrid_Size.Y + 0.02f));
-            LeftNeuron = new Neuron(new Vector2(1.1f, (Neuron.Size / NeuronGrid_Size.Y + 0.02f) * 2));
-            JumpNeuron = new Neuron(new Vector2(1.1f, (Neuron.Size / NeuronGrid_Size.Y + 0.02f) * 3));
-            SprintNeuron = new Neuron(new Vector2(1.1f, (Neuron.Size / NeuronGrid_Size.Y + 0.02f) * 4));
+            RightNeuron = new Neuron(new Vector2(1.1f, 0));
+            LeftNeuron = new Neuron(new Vector2(1.1f, Neuron.Size / NeuronGrid_Size.Y + 0.25f));
+            JumpNeuron = new Neuron(new Vector2(1.1f, (Neuron.Size / NeuronGrid_Size.Y + 0.25f) * 2));
+            SprintNeuron = new Neuron(new Vector2(1.1f, (Neuron.Size / NeuronGrid_Size.Y + 0.25f) * 3));
 
             Neurons.Add(SprintNeuron);
             Neurons.Add(RightNeuron);
@@ -72,8 +80,8 @@ namespace Platformer.Neural_Network
             JumpNeuron.Name = nameof(JumpNeuron);
             SprintNeuron.Name = nameof(SprintNeuron);
 
-            int CompleteNeuronCount = Neurons.Count + InputNeurons.GetLength(0) * InputNeurons.GetLength(1);
-            float InputNeuronAmountPercentage = InputNeurons.GetLength(0) * InputNeurons.GetLength(1) / (float)CompleteNeuronCount;
+            int CompleteNeuronCount = Neurons.Count + InputNeurons.GetLength(0);
+            float InputNeuronAmountPercentage = InputNeurons.GetLength(0) / (float)CompleteNeuronCount;
 
             // Add Axons
             int AxonCount = Values.RDM.Next(1, 3);
@@ -82,14 +90,14 @@ namespace Platformer.Neural_Network
                 if ((float)Values.RDM.NextDouble() < InputNeuronAmountPercentage)
                 {
                     // Axon input is a inputNeuron
-                    Axons.Add(new Axon(GetRandomInputNeuron(), GetRandomNonInputNeuron()));
+                    Axons.Add(new Axon(GetRandomInputNeuron(), GetRandomNonInputNeuron(), this));
                 }
                 else
                 {
                     // Axon input is not a inputNeuron
                     Neuron Input = GetRandomNonInputNeuron();
                     Neuron Output = GetRandomNonInputNeuron(Input);
-                    Axons.Add(new Axon(Input, Output));
+                    Axons.Add(new Axon(Input, Output, this));
                 }
             }
 
@@ -119,7 +127,7 @@ namespace Platformer.Neural_Network
 
         public Neuron GetRandomInputNeuron()
         {
-            return InputNeurons[Values.RDM.Next(0, InputNeurons.GetLength(0)), Values.RDM.Next(0, InputNeurons.GetLength(1))];
+            return InputNeurons[Values.RDM.Next(0, InputNeurons.GetLength(0))];
         }
         public Neuron GetRandomNonInputNeuron()
         {
@@ -148,9 +156,6 @@ namespace Platformer.Neural_Network
                 if (Ax.Input == N || Ax.Output == N)
                     return false;
 
-            if (N.Name != null)
-                N.Name.Split();
-
             return true;
         }
 
@@ -161,46 +166,53 @@ namespace Platformer.Neural_Network
                 Entities.Add(N);
             foreach (Axon Ax in Axons)
                 Entities.Add(Ax);
-
-            if (!Neurons.Contains(RightNeuron))
-                throw new Exception();
-
-            if (!Entities.Contains(RightNeuron))
-                throw new Exception();
         }
         public void UpdateInputNeurons()
         {
-            if (!Entities.Contains(RightNeuron))
-                throw new Exception();
-
             Vector2 PlayerBlockCoords = new Vector2(Rect.X + Rect.Width / 2f - Level.BlockScale / 2f, Rect.Y + Rect.Height - Level.BlockScale);
             Vector2 UpperRightCheckZone = new Vector2(PlayerBlockCoords.X - InputSizeSqrt / 2f * Level.BlockScale, 
                 PlayerBlockCoords.Y - InputSizeSqrt / 2f * Level.BlockScale);
-
+            
             for (int x = 0; x < InputSizeSqrt; x++)
                 for (int y = 0; y < InputSizeSqrt; y++)
                 {
-                    InputNeurons[x, y].value = Parent.GetNeuronValuesForTheseCoords(new Point((int)UpperRightCheckZone.X + x * (Level.BlockScale), (int)UpperRightCheckZone.Y + y * (Level.BlockScale)));
+                    InputNeurons[x * InputSizeSqrt + y].value = Parent.GetNeuronValuesForTheseCoords(
+                        new Point((int)UpperRightCheckZone.X + x * (Level.BlockScale), (int)UpperRightCheckZone.Y + y * (Level.BlockScale)));
                 }
+            
+            /*
+            if (Timer == 0 && LastInputNeurons != null)
+            {
+                for (int x = 0; x < InputSizeSqrt; x++)
+                    for (int y = 0; y < InputSizeSqrt; y++)
+                        if (LastInputNeurons[x, y].value != InputNeurons[x, y].value)
+                            this.GetHashCode();
+            }
 
-            if (!Entities.Contains(RightNeuron))
-                throw new Exception();
+            try
+            {
+                if (Timer == 0)
+                {
+                    LastInputNeurons = new Neuron[InputSizeSqrt, InputSizeSqrt];
+                    for (int x = 0; x < InputSizeSqrt; x++)
+                        for (int y = 0; y < InputSizeSqrt; y++)
+                            LastInputNeurons[x, y] = (Neuron)InputNeurons[x, y].Clone();
+                }
+            }
+            catch { }
+            */
         }
         public bool InputNeuronsContain(Neuron N)
         {
-            for (int x = 0; x < InputSizeSqrt; x++)
-                for (int y = 0; y < InputSizeSqrt; y++)
-                    if (N == InputNeurons[x, y])
-                        return true;
+            for (int i = 0; i < InputSizeSqrt; i++)
+                if (N == InputNeurons[i])
+                    return true;
 
             return false;
         }
 
         void Mutate()
         {
-            if (!Entities.Contains(RightNeuron))
-                throw new Exception();
-
             foreach (Axon Ax in Axons)
                 Ax.Mutate();
 
@@ -209,49 +221,48 @@ namespace Platformer.Neural_Network
             {
                 Neuron N = new Neuron(new Vector2((float)(Values.RDM.NextDouble() * 2 - 1), (float)(Values.RDM.NextDouble() * 2 - 1)));
 
+                Neurons.Add(N);
+
                 int Connections = Values.RDM.Next(1, Neurons.Count / 2);
                 for (int i = 0; i < Connections; i++)
-                    Axons.Add(new Axon(N, Neurons[Values.RDM.Next(Neurons.Count)]));
-
-                Neurons.Add(N);
+                    Axons.Add(new Axon(N, Neurons[Values.RDM.Next(Neurons.Count)], this));
             }
 
             // Remove Neuron
             while (Values.RDM.NextDouble() < MutationProbability)
             {
                 Neuron N = Neurons[Values.RDM.Next(Neurons.Count)];
-
-                for (int i = 0; i < Axons.Count; i++)
-                {
-                    if (Axons[i].Output == N || Axons[i].Input == N)
-                    {
-                        Axons.RemoveAt(i);
-                        i--;
-                    }
-                }
-
+                
                 if (N != RightNeuron && N != LeftNeuron && N != JumpNeuron && N != SprintNeuron)
+                {
+                    for (int i = 0; i < Axons.Count; i++)
+                    {
+                        if (Axons[i].Output == N || Axons[i].Input == N)
+                        {
+                            Axons.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                    
                     Neurons.Remove(N);
+                }
             }
 
             // Add Axon
             while (Values.RDM.NextDouble() < MutationProbability)
             {
-                int CompleteNeuronCount = Neurons.Count + InputNeurons.GetLength(0) * InputNeurons.GetLength(1);
-                float InputNeuronAmountPercentage = InputNeurons.GetLength(0) * InputNeurons.GetLength(1) / (float)CompleteNeuronCount;
+                int CompleteNeuronCount = Neurons.Count + InputNeurons.GetLength(0);
+                float InputNeuronAmountPercentage = InputNeurons.GetLength(0) / (float)CompleteNeuronCount;
 
                 if ((float)Values.RDM.NextDouble() < InputNeuronAmountPercentage)
-                    Axons.Add(new Axon(GetRandomInputNeuron(), GetRandomNonInputNeuron()));
+                    Axons.Add(new Axon(GetRandomInputNeuron(), GetRandomNonInputNeuron(), this));
                 else
                 {
                     Neuron Input = GetRandomNonInputNeuron();
                     Neuron Output = GetRandomNonInputNeuron(Input);
-                    Axons.Add(new Axon(Input, Output));
+                    Axons.Add(new Axon(Input, Output, this));
                 }
             }
-
-            if (!Entities.Contains(RightNeuron))
-                throw new Exception();
         }
 
         public void UpdateNeuralNetwork()
@@ -259,10 +270,12 @@ namespace Platformer.Neural_Network
             if (Entities.Count != Neurons.Count + Axons.Count)
                 UpdateEntitiesList();
 
+            /*
             foreach (Neuron N in InputNeurons)
                 N.value = 0;
             foreach (Neuron N in Neurons)
                 N.value = 0;
+            */
 
             //CurrentDebugTime = Stopwatch.GetTimestamp();
             UpdateInputNeurons();
@@ -281,13 +294,16 @@ namespace Platformer.Neural_Network
             TochedFloorTimer++;
             if (CanMove)
             {
+                if (Timer == 1)
+                    this.GetHashCode();
+
                 Vel.X /= 1.05f;
 
                 Vector2 AntiGravVel = Vel;
                 if (AntiGravVel.Y > -5)
                     AntiGravVel.Y = -5;
                 Rectangle HalfFuture = new Rectangle(Rect.X + (int)AntiGravVel.X / 2, Rect.Y + (int)AntiGravVel.Y / 2, Rect.Width, Rect.Height);
-                HalfFuture.Inflate(-10, -10);
+                HalfFuture.Inflate(CollisionDetectionRectangleInflation, CollisionDetectionRectangleInflation);
                 if (!Parent.NoBlockIntersectsThisRectangle(HalfFuture))
                     Vel = Vector2.Zero;
 
@@ -340,7 +356,7 @@ namespace Platformer.Neural_Network
             if (AntiGravVel2.Y > -5)
                 AntiGravVel2.Y = -5;
             Rectangle HalfFuture2 = new Rectangle(Rect.X + (int)AntiGravVel2.X / 2, Rect.Y + (int)AntiGravVel2.Y / 2, Rect.Width, Rect.Height);
-            HalfFuture2.Inflate(-10, -10);
+            HalfFuture2.Inflate(CollisionDetectionRectangle2Inflation, CollisionDetectionRectangle2Inflation);
             if (!Parent.NoBlockIntersectsThisRectangle(HalfFuture2))
                 Vel = -Vel;
 
@@ -362,6 +378,20 @@ namespace Platformer.Neural_Network
             #endregion
         }
 
+        public override void Ressurection()
+        {
+            foreach (Neuron N in InputNeurons)
+                N.value = 0;
+            foreach (Neuron N in Neurons)
+                N.value = 0;
+            Vel = Vector2.Zero;
+            Rect = new Rectangle((int)RespawnPoint.X, (int)RespawnPoint.Y, Level.BlockScale, (int)(Level.BlockScale * 1.75f));
+            JumpNeuron.value = 0;
+            LeftNeuron.value = 0;
+            RightNeuron.value = 0;
+            SprintNeuron.value = 0;
+            base.Ressurection();
+        }
         public override void Draw(SpriteBatch SB)
         {
             foreach (NeuralNetworkEntity E in Entities)
@@ -385,18 +415,17 @@ namespace Platformer.Neural_Network
         public override object Clone()
         {
             if (!Entities.Contains(RightNeuron))
-                throw new Exception();
+                UpdateEntitiesList();
 
             AI_Player P = (AI_Player)base.Clone();
-            P.InputNeurons = new Neuron[InputSizeSqrt, InputSizeSqrt];
+            P.InputNeurons = new Neuron[InputSizeSqrt * InputSizeSqrt];
             P.Neurons = new List<Neuron>();
             P.Axons = new List<Axon>();
             P.Entities = new List<NeuralNetworkEntity>();
             P.Fitness = 0;
 
-            for (int x = 0; x < InputSizeSqrt; x++)
-                for (int y = 0; y < InputSizeSqrt; y++)
-                    P.InputNeurons[x, y] = (Neuron)InputNeurons[x, y].Clone();
+            for (int i = 0; i < InputNeurons.Length; i++)
+                P.InputNeurons[i] = (Neuron)InputNeurons[i].Clone();
 
             foreach (Neuron N in Neurons)
             {

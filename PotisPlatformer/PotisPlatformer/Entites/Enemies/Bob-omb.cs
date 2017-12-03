@@ -8,13 +8,15 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
+    [XmlInclude(typeof(Bob_omb))]
     public class Bob_omb : Enemy
     {
         int ExplodingCounter;
-        static int ExplosionRadius = 150;
+        static int ExplosionRadius = 250;
 
         public Bob_omb() { }
         public Bob_omb(int PosX, int PosY, Level Parent) : base(PosX, PosY, true, 2.5f, Parent)
@@ -28,9 +30,13 @@ namespace Platformer
             int a = 0;
             for (int i = 0; i < Parent.BlockList.Count; i++)
             {
-                if (Parent.BlockList[i].GetType() == typeof(Brick) && Vector2.DistanceSquared(Parent.BlockList[i].GetPosVector2(), this.GetPosVector2()) < ExplosionRadius * ExplosionRadius)
+                if (/*Parent.BlockList[i].GetType() == typeof(Brick) && */
+                    Vector2.DistanceSquared(Parent.BlockList[i].GetPosVector2(), this.GetPosVector2()) < ExplosionRadius * ExplosionRadius)
                 {
-                    ParticleManager.CreateParticleExplosionFromEntityTexture(Parent.BlockList[i], new Rectangle(0, 0, 16, 16), 0.25f, 1.0f, false, true, false, Parent);
+                    if (Parent.IsDisplayed && StoredData.Default.ParticleEffects)
+                    ParticleManager.CreateParticleExplosion(Parent.BlockList[i], 
+                        new Rectangle(0, 0, 16, 16), 0.25f, false, true, false, 
+                        new Vector2(0, 0), new Vector2(Rect.X + Rect.Width / 2, Rect.Y + Rect.Height / 2 + ExplosionRadius), Parent);
                     Parent.BlockList.Remove(Parent.BlockList[i]);
                     i--;
                 }
@@ -45,7 +51,7 @@ namespace Platformer
                 }
             }
             LevelManager.UpdateTextures();
-            ParticleManager.CreateParticleExplosionFromEntityTexture(this, new Rectangle(0, 0, 16, 16), 0.05f, 4.0f, false, true, false, Parent);
+            ParticleManager.CreateParticleExplosion(this, new Rectangle(0, 0, 16, 16), 0.3f, 3.0f, false, true, false, new Vector2(0, -10), Parent);
             Parent.EnemyList.Remove(this);
 
             return a;
@@ -125,6 +131,11 @@ namespace Platformer
             {
                 FacingRight = true;
             }
+        }
+        public override void UpdateTextureReference()
+        {
+            Texture = Assets.Bob_omb;
+            WalkAnimStates = 2;
         }
 
         public override void Update()

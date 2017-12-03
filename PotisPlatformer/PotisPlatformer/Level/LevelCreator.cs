@@ -11,6 +11,8 @@ using Microsoft.Xna.Framework.Media;
 using System.Reflection;
 using Platformer.Neural_Network;
 using System.Threading.Tasks;
+using System.IO;
+using System.Xml.Serialization;
 
 namespace Platformer
 {
@@ -117,6 +119,9 @@ namespace Platformer
                     if (KillEvolutionThread)
                         break;
 
+                    if (Evolution_Manager.HasReachedTheEnd)
+                        break;
+
                     Evolution_Manager.FinallizeGeneration();
 
                     if (KillEvolutionThread)
@@ -136,7 +141,7 @@ namespace Platformer
         public static Level CreateNewLevel()
         {
             Level L = new Level();
-            L.End = new Vector2(30 * Level.BlockScale, Values.WindowSize.Y - Level.BlockScale - Level.EndHeight);
+            L.End = new Vector2(60 * Level.BlockScale, Values.WindowSize.Y - Level.BlockScale - Level.EndHeight);
             for (int i = 0; i < L.End.X / Level.BlockScale + 10; i++)
             {
                 L.BlockList0.Add(new Block(Assets.BlockGrass, new Vector2(i * Level.BlockScale, Values.WindowSize.Y - Level.BlockScale), true, L));
@@ -154,25 +159,34 @@ namespace Platformer
             LevelDataStorage.LvlList.Add((Level)CurrentLevel.Clone());
             MenuManager.BuildMenus();
 
+            FileStream DataStream = null;
             try
             {
-                System.Xml.Serialization.XmlSerializer writer = new System.Xml.Serialization.XmlSerializer(typeof(Level));
-                int Number = 0;
-                string path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "//PlatformerLevels//Level" + (Number + 1).ToString() + ".xml";
-                string folderpath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "//PlatformerLevels";
+                XmlSerializer writer = new XmlSerializer(typeof(Level), new Type[] { typeof(Block), typeof(Brick),
+                            typeof (Coin), typeof(JumpBlock), typeof(Kugelwilli_Spawner), typeof(QuestionMarkBlock), typeof(SpinningBlock),
+                            typeof(Bob_omb), typeof(Enemy), typeof(Goomba), typeof(Koopa), typeof(Kugelwilli), typeof(Player), typeof(AI_Player),
+                            typeof(Axon), typeof(Neuron), typeof(NeuralNetworkEntity)});
 
-                if (System.IO.Directory.Exists(folderpath))
-                    Number = System.IO.Directory.GetFiles(folderpath).Length;
-                else
-                    System.IO.Directory.CreateDirectory(folderpath);
+                string folderpath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "//PlatformerLevels";
+                int Number = 0;
                 
-                System.IO.FileStream DataStream = System.IO.File.Create(path);
+                if (Directory.Exists(folderpath))
+                    Number = Directory.GetFiles(folderpath).Length;
+                else
+                    Directory.CreateDirectory(folderpath);
+
+                string path = folderpath + "//Level" + (Number + 1).ToString() + ".xml";
+
+                DataStream = File.Create(path);
                 writer.Serialize(DataStream, CurrentLevel);
                 DataStream.Close();
+                System.Windows.Forms.MessageBox.Show("Level saved!");
             }
             catch (Exception e)
             {
                 System.Windows.Forms.MessageBox.Show(e.Message + "\n\n\n" + e.InnerException + "\n\n\n" + e.StackTrace);
+                if (DataStream != null)
+                    DataStream.Close();
             }
 
             //CurrentLevel = CreateNewLevel();
@@ -244,8 +258,17 @@ namespace Platformer
             if (Controls.CurKS.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D))
                 CurrentLevel.Camera.X -= 10;
 
+            if (Controls.CurKS.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.W))
+                CurrentLevel.Camera.Y += 10;
+
+            if (Controls.CurKS.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.S))
+                CurrentLevel.Camera.Y -= 10;
+
             if (CurrentLevel.Camera.X > 200)
                 CurrentLevel.Camera.X = 200;
+
+            if (CurrentLevel.Camera.Y < 0)
+                CurrentLevel.Camera.Y = 0;
 
             if (CurrentLevel.Camera.X < -CurrentLevel.End.X + (int)Values.WindowSize.X - 200)
                 CurrentLevel.Camera.X = -CurrentLevel.End.X + (int)Values.WindowSize.X - 200;
@@ -364,6 +387,7 @@ namespace Platformer
                 }
                 SelectedEntities.Add(E);
             }
+            DraggedEntity = SelectedEntities[0];
             Copy.Clear();
         }
         static void StartTesting()
@@ -422,6 +446,7 @@ namespace Platformer
                         {
                             Evolution_Manager.TestingLevel.Reset();
                             Evolution_Manager.TestingLevel.ThisPlayer = Evolution_Manager.Best;
+                            Evolution_Manager.TestingLevel.ThisPlayer.Ressurection();
                         }
 
                         Evolution_Manager.Update();
@@ -459,8 +484,8 @@ namespace Platformer
                                 for (int i = 0; i < SelectedEntities.Count; i++)
                                 {
                                     if (SelectedEntities[i] != DraggedEntity)
-                                        SelectedEntities[i].CreatorClickPos = new Point(SelectedEntities[i].Rect.X - DraggedEntity.Rect.X + (int)CurrentLevel.Camera.X,
-                                            SelectedEntities[i].Rect.Y - DraggedEntity.Rect.Y + (int)CurrentLevel.Camera.Y);
+                                        SelectedEntities[i].CreatorClickPos = new Point(SelectedEntities[i].Rect.X - DraggedEntity.Rect.X,
+                                            SelectedEntities[i].Rect.Y - DraggedEntity.Rect.Y);
                                 }
 
                                 SelectedEntities.Add(DraggedEntity);
@@ -500,8 +525,8 @@ namespace Platformer
                             {
                                 // SelectedEntities will be positioned relative to the DraggedEntity
                                 if (SelectedEntities[i] != DraggedEntity)
-                                    SelectedEntities[i].Rect = new Rectangle(DraggedEntity.Rect.X - (int)CurrentLevel.Camera.X + SelectedEntities[i].CreatorClickPos.X,
-                                        DraggedEntity.Rect.Y - (int)CurrentLevel.Camera.Y + SelectedEntities[i].CreatorClickPos.Y, SelectedEntities[i].Rect.Width,
+                                    SelectedEntities[i].Rect = new Rectangle(DraggedEntity.Rect.X + SelectedEntities[i].CreatorClickPos.X,
+                                        DraggedEntity.Rect.Y + SelectedEntities[i].CreatorClickPos.Y, SelectedEntities[i].Rect.Width,
                                         SelectedEntities[i].Rect.Height);
 
                                 if (SelectedEntities[i].Rect.X < 0)
@@ -540,6 +565,7 @@ namespace Platformer
                 {
                     Rectangle R = Values.CopyRectangle(SelectedEntities[i].Rect);
                     R.X += (int)CurrentLevel.Camera.X;
+                    R.Y += (int)CurrentLevel.Camera.Y;
                     R.Inflate(5, 5);
                     //SB.Draw(Assets.White, R, Color.Black * 0.5f);
                     Assets.DrawRoundedRectangle(R, 20, Color.Black, SB);
